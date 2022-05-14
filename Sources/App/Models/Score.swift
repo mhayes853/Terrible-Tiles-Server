@@ -10,6 +10,7 @@ import Vapor
 
 // MARK: - Struct
 
+/// Outer world struct without any attachment to the database for a persisted score
 struct Score: Codable, Content {
     let id: UUID
     let playerName: String

@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 import FluentPostgresDriver
+import Redis
 
 
 // configures your application

@@ -11,6 +11,7 @@ import Vapor
 // We'll implicity unwrap these values. If something is nil, it means the .env file
 // is not provided therefore we'll want to complain loudly...
 
+/// Everything loaded from a .env file
 struct Env {
     static var dbHost: String {
         return Environment.get("DB_HOST")!
@@ -31,10 +32,5 @@ struct Env {
     
     static var dbName: String {
         return Environment.get("DB_NAME")!
-    }
-    
-    static var connectionPoolThreads: Int {
-        let threadsStr = Environment.get("NUM_THREADS")!
-        return Int(threadsStr)!
     }
 }

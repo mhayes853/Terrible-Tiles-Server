@@ -10,6 +10,7 @@ import FluentKit
 
 // MARK: - Model
 
+/// Main model for representing a persisted score
 final class ScoreModel: Model {
     static var schema = "scores"
     
