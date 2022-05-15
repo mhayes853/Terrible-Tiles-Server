@@ -6,10 +6,9 @@
 //
 
 import Foundation
-import Vapor
 
 /// Error response for socket errors
-struct GameErrorResponse: Codable, Content {
+struct GameErrorResponse: Encodable {
     let errorCode: GameSocketErrorCode
     let message: String
 }

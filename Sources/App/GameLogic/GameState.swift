@@ -12,6 +12,10 @@ import Foundation
 /// Class Containing main game logic
 class GameState {
     // TODO: - Implement
+    
+    init(info: GameStateInfo) {
+        
+    }
 }
 
 // MARK: - Constants

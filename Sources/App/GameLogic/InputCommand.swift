@@ -13,4 +13,5 @@ enum InputCommand: String {
     case moveDown = "MOVE_DOWN"
     case moveLeft = "MOVE_LEFT"
     case moveRight = "MOVE_RIGHT"
+    case leave = "LEAVE"
 }

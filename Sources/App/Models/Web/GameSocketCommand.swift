@@ -6,11 +6,20 @@
 //
 
 import Foundation
-import Vapor
+
+// MARK: - Model
 
 /// Expected form of command data from a socket connection
-struct GameSocketCommand: Codable, Content {
+struct GameSocketCommand: Decodable {
     let gameId: UUID
     let command: String
-    let stateKey: UUID
+    let nextActionKey: UUID
+}
+
+// MARK: - Error
+
+extension GameSocketCommand {
+    struct CommandError: Error {
+        let errorCode: GameSocketErrorCode
+    }
 }

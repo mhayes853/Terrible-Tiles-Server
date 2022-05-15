@@ -9,10 +9,10 @@ import Foundation
 import Vapor
 import NIOWebSocket
 
-// MARK: - Sending Encodabe Easily
+// MARK: - Sending Encodable Easily
 
 extension WebSocket {
-    func sendJSON<T: Encodable>(_ data: T) async throws {
+    func sendEncodable<T: Encodable>(_ data: T) async throws {
         let encoded = try JSONEncoder().encode(data)
         try await self.send([UInt8](encoded))
     }
@@ -21,12 +21,12 @@ extension WebSocket {
 // MARK: - Sending an error and closing
 
 extension WebSocket {
-    func sendExitError(
+    func closeWithErrorResponse(
         gameErrorCode: GameSocketErrorCode,
         socketErrorCode: WebSocketErrorCode = .policyViolation
     ) async throws {
         let errorResponse = gameErrorCode.defaultErrorResponse
-        try await self.sendJSON(errorResponse)
+        try await self.sendEncodable(errorResponse)
         try await self.close(code: socketErrorCode)
     }
 }

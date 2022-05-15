@@ -6,10 +6,9 @@
 //
 
 import Foundation
-import Vapor
 
 /// The response of the current game state that the client recieves
-struct GameStateResponse: Codable, Content {
+struct GameStateResponse: Encodable {
     let gameId: UUID
     let filledTiles: [Position: TileType]
     let playerPosition: Position

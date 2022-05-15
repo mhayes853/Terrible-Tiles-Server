@@ -33,4 +33,8 @@ struct Env {
     static var dbName: String {
         return Environment.get("DB_NAME")!
     }
+    
+    static var redisHost: String {
+        return Environment.get("REDIS_HOST")!
+    }
 }

@@ -22,6 +22,8 @@ public func configure(_ app: Application) throws {
     
     app.migrations.add(CreateScores())
     
+    app.redis.configuration = try .init(hostname: Env.redisHost)
+    
     // register routes
     try routes(app)
 }

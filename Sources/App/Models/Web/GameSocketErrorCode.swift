@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Main Model
 
 /// Socket specific game error codes
-enum GameSocketErrorCode: String, Codable {
+enum GameSocketErrorCode: String, Encodable {
     case invalidGameId = "INVALID_GAME_ID"
     case invalidStateKey = "INVALID_STATE_KEY"
     case malformedCommand = "MALFORMED_COMMAND"
@@ -29,11 +29,11 @@ extension GameSocketErrorCode {
         case .invalidGameId:
             return "The Game id is either invalid, already finished, or does not exist."
         case .invalidStateKey:
-            return "The state key is invalid, please make sure you send the proper state key on every command."
+            return "The action key is invalid, please make sure you send the proper action key on every command."
         case .malformedCommand:
             return "The command contained data that was not sent in the correct format."
         case .internalError:
-            return "An internal error on the server occurred... It's likely the game state could not be loaded."
+            return "An internal error on the server occurred."
         }
     }
 }
