@@ -1,6 +1,0 @@
-NUM_THREADS=4
-DB_HOST=localhost
-DB_USER=matthewhayes
-DB_PASSWORD=N64jk84mm
-DB_NAME=terrible_tiles
-DB_PORT=5432

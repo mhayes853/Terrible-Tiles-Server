@@ -7,3 +7,14 @@ DerivedData/
 db.sqlite
 .swiftpm
 .env
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
