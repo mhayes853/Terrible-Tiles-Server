@@ -15,3 +15,20 @@ enum TileType: String, Codable {
     case pinkItem = "PINK_ITEM"
     case void = "VOID"
 }
+
+extension TileType {
+    var scoreValue: Int {
+        switch self {
+        case .redItem:
+            return 1
+        case .blueItem:
+            return 3
+        case .purpleItem:
+            return 5
+        case .pinkItem:
+            return 10
+        default:
+            return -1
+        }
+    }
+}

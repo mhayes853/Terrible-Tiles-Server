@@ -43,19 +43,13 @@ class GameController: RouteCollection {
     private func handleGameCommand(ws: WebSocket, text: String) async {
         do {
             let socketCommand = try self.decodeSocketCommand(text)
-            try await self.handleCommand(socketCommand)
+            let response = try await self.handleCommand(socketCommand)
             
-            try await ws.send(socketCommand.command)
+            try await ws.sendEncodable(response)
         } catch is GameStateService.StateError {
-            try? await ws.closeWithErrorResponse(
-                gameErrorCode: .invalidStateKey,
-                socketErrorCode: .policyViolation
-            )
+            try? await ws.closeWithErrorResponse(gameErrorCode: .invalidStateKey)
         } catch let error as GameSocketCommand.CommandError {
-            try? await ws.closeWithErrorResponse(
-                gameErrorCode: error.errorCode,
-                socketErrorCode: .policyViolation
-            )
+            try? await ws.closeWithErrorResponse(gameErrorCode: error.errorCode)
         } catch {
             try? await ws.closeWithErrorResponse(
                 gameErrorCode: .internalError,
@@ -64,26 +58,6 @@ class GameController: RouteCollection {
         }
     }
     
-    private func handleCommand(_ command: GameSocketCommand) async throws {
-        let loadedStateInfo = try await self.loadGameStateInfo(command)
-        
-        // TODO: - Update Game State based on command
-        print(loadedStateInfo)
-    }
-    
-    private func loadGameStateInfo(_ command: GameSocketCommand) async throws -> GameStateInfo {
-        let loadedStateInfo = try await self.gameStateService.load(
-            id: command.gameId,
-            stateKey: command.nextActionKey
-        )
-        
-        guard let loadedStateInfo = loadedStateInfo else {
-            throw GameSocketCommand.CommandError(errorCode: .invalidGameId)
-        }
-        
-        return loadedStateInfo
-    }
-
     private func decodeSocketCommand(_ text: String) throws -> GameSocketCommand {
         guard let encodedCommand = text.data(using: .utf8) else {
             throw GameSocketCommand.CommandError(errorCode: .malformedCommand)
@@ -95,5 +69,42 @@ class GameController: RouteCollection {
         }
         
         return decodedCommand
+    }
+    
+    private func handleCommand(_ socketCommand: GameSocketCommand) async throws -> GameStateResponse {
+        let loadedStateInfo = try await self.loadGameStateInfo(socketCommand)
+        let gameState = loadedStateInfo.plainGameState
+        gameState.processInput(command: socketCommand.inputCommand)
+        
+        let updatedStateInfo = GameStateInfo(
+            id: loadedStateInfo.id,
+            filledTiles: gameState.filledTiles,
+            playerPosition: gameState.playerPosition,
+            isDead: gameState.isDead,
+            itemScore: gameState.itemScore,
+            stateKey: .init(),
+            createdAt: loadedStateInfo.createdAt
+        )
+        
+        if updatedStateInfo.isDead {
+            // TODO: - Handle Death
+            return updatedStateInfo.socketResponse
+        } else {
+            try await self.gameStateService.update(updatedStateInfo)
+            return updatedStateInfo.socketResponse
+        }
+    }
+    
+    private func loadGameStateInfo(_ socketCommand: GameSocketCommand) async throws -> GameStateInfo {
+        let loadedStateInfo = try await self.gameStateService.load(
+            id: socketCommand.gameId,
+            stateKey: socketCommand.nextActionKey
+        )
+        
+        guard let loadedStateInfo = loadedStateInfo else {
+            throw GameSocketCommand.CommandError(errorCode: .invalidGameId)
+        }
+        
+        return loadedStateInfo
     }
 }

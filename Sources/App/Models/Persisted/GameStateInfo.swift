@@ -11,6 +11,8 @@ struct GameStateInfo: Codable, Equatable {
     let id: UUID
     let filledTiles: [Position: TileType]
     let playerPosition: Position
+    let isDead: Bool
+    let itemScore: Int
     let stateKey: UUID
     let createdAt: Date
 }

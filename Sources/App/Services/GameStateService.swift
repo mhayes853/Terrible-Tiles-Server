@@ -21,10 +21,12 @@ class GameStateService {
     func createNew() async throws -> GameStateInfo {
         let newState = GameStateInfo(
             id: .init(),
-            filledTiles: [:],
-            playerPosition: .init(x: 0, y: 0),
+            filledTiles: GameState.Defaults.filledTiles,
+            playerPosition: GameState.Defaults.playerPosition,
+            isDead: GameState.Defaults.isDead,
+            itemScore: GameState.Defaults.itemScore,
             stateKey: .init(),
-            createdAt: .now
+            createdAt: GameState.Defaults.startedAt
         )
         
         try await self.store.set(id: newState.id, newState)

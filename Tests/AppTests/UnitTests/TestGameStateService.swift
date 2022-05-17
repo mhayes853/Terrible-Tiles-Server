@@ -32,6 +32,8 @@ class TestGameStateService: XCTestCase {
                 .init(x: 13, y: 10): .redItem
             ],
             playerPosition: .init(x: 10, y: 4),
+            isDead: false,
+            itemScore: 0,
             stateKey: created.stateKey,
             createdAt: created.createdAt
         )
