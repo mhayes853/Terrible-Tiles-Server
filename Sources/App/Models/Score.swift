@@ -13,7 +13,6 @@ import Vapor
 /// Outer world struct without any attachment to the database for a persisted score
 struct Score: Codable, Content {
     let id: UUID
-    let playerName: String
     let score: Int
     let createdAt: Date
 }
@@ -24,7 +23,6 @@ extension Score {
     var scoreModel: ScoreModel {
         .init(
             id: self.id,
-            playerName: self.playerName,
             score: self.score,
             createdAt: self.createdAt
         )

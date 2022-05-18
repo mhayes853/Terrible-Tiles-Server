@@ -24,7 +24,7 @@ class ScoresService {
     }
     
     /// Fetches the top scores in the database
-    func topScores(amount: Int) async throws -> [Score] {
+    func topScores(amount: Int = Env.amountTopScores) async throws -> [Score] {
         return try await ScoreModel.query(on: self.db)
             .sort(ScoreModel.Column.score.fieldKey, .descending)
             .limit(amount)

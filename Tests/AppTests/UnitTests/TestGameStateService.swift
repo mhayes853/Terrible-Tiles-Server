@@ -23,41 +23,28 @@ class TestGameStateService: XCTestCase {
         try await assertMatchingPersisted(result)
     }
     
-    func testSetPersists() async throws {
-        let created = try await gameStateService.createNew()
-        let updateState = GameStateInfo(
-            id: created.id,
-            filledTiles: [
-                .init(x: 10, y: 5): .blueItem,
-                .init(x: 13, y: 10): .redItem
-            ],
-            playerPosition: .init(x: 10, y: 4),
-            isDead: false,
-            itemScore: 0,
-            stateKey: created.stateKey,
-            createdAt: created.createdAt
-        )
+    func testUpdateRespondsToActionsCorrectly() async throws {
+        let gameInfo = try await gameStateService.createNew()
+        let updatedGameInfo = try await gameStateService.runCommand(gameId: gameInfo.id, input: .leave, stateKey: gameInfo.stateKey)
         
-        try await gameStateService.update(updateState)
-        
-        try await assertMatchingPersisted(updateState)
-        try await assertMatchingNotPersisted(created)
+        XCTAssertTrue(updatedGameInfo.isDead)
+        try await assertMatchingPersisted(updatedGameInfo)
+    }
+    
+    func testUpdateThrowsStateErrorOnInvalidStateKey() async throws {
+        do {
+            let created = try await gameStateService.createNew()
+            _ = try await gameStateService.runCommand(gameId: created.id, input: .leave, stateKey: .init())
+            XCTFail("Passed state key does not match persisted state key, therefore this should throw.")
+        } catch {
+            XCTAssertTrue(error is GameStateService.StateError)
+        }
     }
     
     func testRemovePersists() async throws {
         let created = try await gameStateService.createNew()
         try await gameStateService.remove(id: created.id)
         try await assertMatchingNotPersisted(created)
-    }
-    
-    func testLoadingStateWithInvalidKeyThrows() async throws {
-        do {
-            let created = try await gameStateService.createNew()
-            _ = try await gameStateService.load(id: created.id, stateKey: .init())
-            XCTFail("Passed state key does not match persisted state key, therefore this should throw.")
-        } catch {
-            XCTAssertTrue(error is GameStateService.StateError)
-        }
     }
     
     private func assertMatchingPersisted(_ info: GameStateInfo) async throws {

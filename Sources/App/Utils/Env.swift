@@ -8,6 +8,8 @@
 import Foundation
 import Vapor
 
+// MARK: - Env Struct
+
 // We'll implicity unwrap these values. If something is nil, it means the .env file
 // is not provided therefore we'll want to complain loudly...
 
@@ -18,8 +20,7 @@ struct Env {
     }
     
     static var dbPort: Int {
-        let portStr = Environment.get("DB_PORT")!
-        return Int(portStr)!
+        return Environment.getInteger("DB_PORT")
     }
     
     static var dbUser: String {
@@ -36,5 +37,18 @@ struct Env {
     
     static var redisHost: String {
         return Environment.get("REDIS_HOST")!
+    }
+    
+    static var amountTopScores: Int {
+        return Environment.getInteger("AMOUNT_TOP_SCORES")
+    }
+}
+
+// MARK: - Helpers
+
+private extension Environment {
+    static func getInteger(_ key: String) -> Int {
+        let strInt = Self.get(key)!
+        return Int(strInt)!
     }
 }

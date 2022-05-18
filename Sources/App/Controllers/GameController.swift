@@ -42,14 +42,23 @@ class GameController: RouteCollection {
     
     private func handleGameCommand(ws: WebSocket, text: String) async {
         do {
-            let socketCommand = try self.decodeSocketCommand(text)
-            let response = try await self.handleCommand(socketCommand)
+            let socketCommand = try GameSocketCommand(rawText: text)
+            let updatedInfo = try await self.gameStateService.runCommand(
+                gameId: socketCommand.gameId,
+                input: socketCommand.inputCommand,
+                stateKey: socketCommand.nextActionKey
+            )
             
-            try await ws.sendEncodable(response)
-        } catch is GameStateService.StateError {
-            try? await ws.closeWithErrorResponse(gameErrorCode: .invalidStateKey)
+            if updatedInfo.isDead {
+                // Game Over, send score back to the client and clean up game state
+                try await self.closeGame(ws: ws, gameStateInfo: updatedInfo)
+            } else {
+                try await ws.sendEncodable(updatedInfo.socketResponse)
+            }
+        } catch let error as GameStateService.StateError {
+            try? await ws.sendGameError(error == .badStateKey ? .invalidStateKey : .invalidGameId)
         } catch let error as GameSocketCommand.CommandError {
-            try? await ws.closeWithErrorResponse(gameErrorCode: error.errorCode)
+            try? await ws.sendGameError(error.errorCode)
         } catch {
             try? await ws.closeWithErrorResponse(
                 gameErrorCode: .internalError,
@@ -58,53 +67,19 @@ class GameController: RouteCollection {
         }
     }
     
-    private func decodeSocketCommand(_ text: String) throws -> GameSocketCommand {
-        guard let encodedCommand = text.data(using: .utf8) else {
-            throw GameSocketCommand.CommandError(errorCode: .malformedCommand)
-        }
-        
-        let decodedCommand = try? JSONDecoder().decode(GameSocketCommand.self, from: encodedCommand)
-        guard let decodedCommand = decodedCommand else {
-            throw GameSocketCommand.CommandError(errorCode: .malformedCommand)
-        }
-        
-        return decodedCommand
+    private func closeGame(ws: WebSocket, gameStateInfo: GameStateInfo) async throws {
+        // TODO: - Delete Long-Running Game Task to Drop Tiles
+        try await self.gameStateService.remove(id: gameStateInfo.id)
+        let response = try await self.handleFinalScore(gameStateInfo: gameStateInfo)
+        try await ws.sendEncodable(response)
+        try await ws.close()
+        try await self.scoresService.insertNew(score: response.playerScore)
     }
     
-    private func handleCommand(_ socketCommand: GameSocketCommand) async throws -> GameStateResponse {
-        let loadedStateInfo = try await self.loadGameStateInfo(socketCommand)
-        let gameState = loadedStateInfo.plainGameState
-        gameState.processInput(command: socketCommand.inputCommand)
-        
-        let updatedStateInfo = GameStateInfo(
-            id: loadedStateInfo.id,
-            filledTiles: gameState.filledTiles,
-            playerPosition: gameState.playerPosition,
-            isDead: gameState.isDead,
-            itemScore: gameState.itemScore,
-            stateKey: .init(),
-            createdAt: loadedStateInfo.createdAt
-        )
-        
-        if updatedStateInfo.isDead {
-            // TODO: - Handle Death
-            return updatedStateInfo.socketResponse
-        } else {
-            try await self.gameStateService.update(updatedStateInfo)
-            return updatedStateInfo.socketResponse
-        }
-    }
-    
-    private func loadGameStateInfo(_ socketCommand: GameSocketCommand) async throws -> GameStateInfo {
-        let loadedStateInfo = try await self.gameStateService.load(
-            id: socketCommand.gameId,
-            stateKey: socketCommand.nextActionKey
-        )
-        
-        guard let loadedStateInfo = loadedStateInfo else {
-            throw GameSocketCommand.CommandError(errorCode: .invalidGameId)
-        }
-        
-        return loadedStateInfo
+    private func handleFinalScore(gameStateInfo: GameStateInfo) async throws -> GameScoreResponse {
+        let finalScore = gameStateInfo.calculatefinalScore()
+        try await self.scoresService.insertNew(score: finalScore)
+        let topScores = try await self.scoresService.topScores()
+        return .init(gameId: gameStateInfo.id, playerScore: finalScore, topScores: topScores)
     }
 }

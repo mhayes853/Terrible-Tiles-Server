@@ -19,23 +19,29 @@ class GameStateService {
     
     /// Initialize new state
     func createNew() async throws -> GameStateInfo {
-        let newState = GameStateInfo(
-            id: .init(),
-            filledTiles: GameState.Defaults.filledTiles,
-            playerPosition: GameState.Defaults.playerPosition,
-            isDead: GameState.Defaults.isDead,
-            itemScore: GameState.Defaults.itemScore,
-            stateKey: .init(),
-            createdAt: GameState.Defaults.startedAt
-        )
-        
+        let newState = GameStateInfo()
         try await self.store.set(id: newState.id, newState)
         return newState
     }
     
-    /// Update existing state
-    func update(_ newState: GameStateInfo) async throws {
-        try await self.store.set(id: newState.id, newState)
+    /// Runs game command and saves updated state
+    func runCommand(gameId: UUID, input: InputCommand, stateKey: UUID) async throws -> GameStateInfo {
+        guard let loadedInfo = try await self.load(id: gameId, stateKey: stateKey) else {
+            throw StateError.notFound
+        }
+        let gameState = loadedInfo.plainGameState
+        gameState.processInput(command: input)
+        
+        let updatedInfo = GameStateInfo(
+            id: loadedInfo.id,
+            filledTiles: gameState.filledTiles,
+            playerPosition: gameState.playerPosition,
+            isDead: gameState.isDead,
+            itemScore: gameState.itemScore,
+            createdAt: loadedInfo.createdAt
+        )
+        try await self.store.set(id: updatedInfo.id, updatedInfo)
+        return updatedInfo
     }
     
     /// Remove existing state
@@ -46,15 +52,21 @@ class GameStateService {
     /// Load existing state, throws if stateKey does not match persisted stateKey
     func load(id: UUID, stateKey: UUID) async throws -> GameStateInfo? {
         guard let loaded = try await self.store.get(id: id) else { return nil }
-        guard loaded.stateKey == stateKey else { throw StateError(message: "Invalid State Key") }
+        guard loaded.stateKey == stateKey else { throw StateError.badStateKey }
         return loaded
+    }
+    
+    /// Calculates the score for a given game state
+    func calculateScore(for gameStateInfo: GameStateInfo) -> Score {
+        return .init(id: gameStateInfo.id, score: 0, createdAt: gameStateInfo.createdAt)
     }
 }
 
 // MARK: - Error Type
 
 extension GameStateService {
-    struct StateError: Error {
-        let message: String
+    enum StateError: Error {
+        case notFound
+        case badStateKey
     }
 }
