@@ -15,28 +15,8 @@ import Vapor
 
 /// Everything loaded from a .env file
 struct Env {
-    static var dbHost: String {
-        return Environment.get("DB_HOST")!
-    }
-    
-    static var dbPort: Int {
-        return Environment.getInteger("DB_PORT")
-    }
-    
-    static var dbUser: String {
-        return Environment.get("DB_USER")!
-    }
-    
-    static var dbPassword: String {
-        return Environment.get("DB_PASSWORD")!
-    }
-    
-    static var dbName: String {
-        return Environment.get("DB_NAME")!
-    }
-    
-    static var redisHost: String {
-        return Environment.get("REDIS_HOST")!
+    static var sqlitePath: String {
+        return Environment.get("SQLITE_PATH")!
     }
     
     static var amountTopScores: Int {

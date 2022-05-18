@@ -2,16 +2,24 @@
 //  File.swift
 //  
 //
-//  Created by Matthew Hayes on 5/14/22.
+//  Created by Matthew Hayes on 5/18/22.
 //
 
 import Foundation
 
-/// Key Value Store for Persisting Game State Info
-protocol GameStateStore {
-    func set(id: UUID, _ gameStateInfo: GameStateInfo) async throws
+/// Simple Implementation of a Game State Store
+actor GameStateStore: GameStateStoreProtocol {
+    private var stateTable = [UUID: GameStateInfo]()
     
-    func get(id: UUID) async throws -> GameStateInfo?
+    func get(id: UUID) async throws -> GameStateInfo? {
+        return self.stateTable[id]
+    }
     
-    func remove(id: UUID) async throws
+    func set(id: UUID, _ gameStateInfo: GameStateInfo) async throws {
+        self.stateTable[id] = gameStateInfo
+    }
+    
+    func remove(id: UUID) async throws {
+        self.stateTable.removeValue(forKey: id)
+    }
 }

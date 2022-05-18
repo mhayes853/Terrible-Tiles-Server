@@ -63,7 +63,7 @@ class TestGameStateService: XCTestCase {
 
 // MARK: - Mock GameStateStore
 
-class MockGameStateStore: GameStateStore {
+class MockGameStateStore: GameStateStoreProtocol {
     private var map = [UUID: GameStateInfo]()
     
     public func set(id: UUID, _ gameStateInfo: GameStateInfo) async throws {

@@ -11,9 +11,9 @@ import Foundation
 
 /// Service for accessing persisted game states
 class GameStateService {
-    private var store: any GameStateStore
+    private var store: any GameStateStoreProtocol
     
-    init(_ store: any GameStateStore) {
+    init(_ store: any GameStateStoreProtocol) {
         self.store = store
     }
     
@@ -54,11 +54,6 @@ class GameStateService {
         guard let loaded = try await self.store.get(id: id) else { return nil }
         guard loaded.stateKey == stateKey else { throw StateError.badStateKey }
         return loaded
-    }
-    
-    /// Calculates the score for a given game state
-    func calculateScore(for gameStateInfo: GameStateInfo) -> Score {
-        return .init(id: gameStateInfo.id, score: 0, createdAt: gameStateInfo.createdAt)
     }
 }
 
