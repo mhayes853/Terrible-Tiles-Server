@@ -87,8 +87,8 @@ class GameState {
 extension GameState {
     enum Constants {
         // An Odd number can keep the positioning somewhat symetrical
-        static let maxRows = 101
-        static let maxCols = 101
+        static let maxRows = 15
+        static let maxCols = 25
     }
 }
 
@@ -97,7 +97,7 @@ extension GameState {
 extension GameState {
     enum Defaults {
         static let filledTiles = [Position: TileType]()
-        static let playerPosition = Position(x: 50, y: 50)
+        static let playerPosition = Position(x: 12, y: 7)
         static let isDead = false
         static let itemScore = 0
         static let startedAt = Date.now

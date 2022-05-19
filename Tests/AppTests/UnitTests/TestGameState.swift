@@ -33,9 +33,9 @@ class TestGameState: XCTestCase {
         
         let expectedPosition = Position(
             x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y - 20
+            y: GameState.Defaults.playerPosition.y - 5
         )
-        gameState.testSimpleMovement(amountTimes: 20, command: .moveUp, expectedPosition: expectedPosition)
+        gameState.testSimpleMovement(amountTimes: 5, command: .moveUp, expectedPosition: expectedPosition)
     }
     
     func testMoveUpRespectsLimit() {
@@ -61,10 +61,10 @@ class TestGameState: XCTestCase {
     func testMoveLeftMultipleTimes() {
         let gameState = GameState()
         let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x - 20,
+            x: GameState.Defaults.playerPosition.x - 10,
             y: GameState.Defaults.playerPosition.y
         )
-        gameState.testSimpleMovement(amountTimes: 20, command: .moveLeft, expectedPosition: expectedPosition)
+        gameState.testSimpleMovement(amountTimes: 10, command: .moveLeft, expectedPosition: expectedPosition)
     }
     
     func testMoveLeftRespectsLimit() {
@@ -90,9 +90,9 @@ class TestGameState: XCTestCase {
         let gameState = GameState()
         let expectedPosition = Position(
             x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y + 20
+            y: GameState.Defaults.playerPosition.y + 5
         )
-        gameState.testSimpleMovement(amountTimes: 20, command: .moveDown, expectedPosition: expectedPosition)
+        gameState.testSimpleMovement(amountTimes: 5, command: .moveDown, expectedPosition: expectedPosition)
     }
     
     func testMoveDownRespectsLimit() {
@@ -120,10 +120,10 @@ class TestGameState: XCTestCase {
     func testMoveRightMultipleTimes() {
         let gameState = GameState()
         let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x + 20,
+            x: GameState.Defaults.playerPosition.x + 10,
             y: GameState.Defaults.playerPosition.y
         )
-        gameState.testSimpleMovement(amountTimes: 20, command: .moveRight, expectedPosition: expectedPosition)
+        gameState.testSimpleMovement(amountTimes: 10, command: .moveRight, expectedPosition: expectedPosition)
     }
     
     func testMoveRightRespectsLimit() {
@@ -138,7 +138,7 @@ class TestGameState: XCTestCase {
     
     func testUpLeftDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 0, y: 0)
+        let expectedPosition = Position(x: 4, y: 0)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveLeft,
@@ -149,7 +149,7 @@ class TestGameState: XCTestCase {
     
     func testUpRightDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: GameState.Constants.maxRows - 1, y: 0)
+        let expectedPosition = Position(x: 20, y: 0)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveRight,
@@ -160,7 +160,7 @@ class TestGameState: XCTestCase {
     
     func testDownLeftDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 0, y: GameState.Constants.maxCols - 1)
+        let expectedPosition = Position(x: 4, y: 14)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveLeft,
@@ -171,7 +171,7 @@ class TestGameState: XCTestCase {
     
     func testDownRightDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: GameState.Constants.maxRows - 1, y: GameState.Constants.maxCols - 1)
+        let expectedPosition = Position(x: 20, y: 14)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveRight,
@@ -182,10 +182,10 @@ class TestGameState: XCTestCase {
     
     func testSquareMovement() {
         let gameState = GameState()
-        gameState.moveRepeatedly(amountTimes: 10, command: .moveLeft)
-        gameState.moveRepeatedly(amountTimes: 10, command: .moveUp)
-        gameState.moveRepeatedly(amountTimes: 10, command: .moveRight)
-        gameState.moveRepeatedly(amountTimes: 10, command: .moveDown)
+        gameState.moveRepeatedly(amountTimes: 4, command: .moveLeft)
+        gameState.moveRepeatedly(amountTimes: 4, command: .moveUp)
+        gameState.moveRepeatedly(amountTimes: 4, command: .moveRight)
+        gameState.moveRepeatedly(amountTimes: 4, command: .moveDown)
         XCTAssertEqual(gameState.playerPosition, GameState.Defaults.playerPosition)
     }
     
@@ -216,15 +216,11 @@ class TestGameState: XCTestCase {
     
     func testCollectMultipleItems() {
         let itemTiles = [
-            Position(x: 23, y: 45): TileType.pinkItem,
-            Position(x: 12, y: 85): TileType.blueItem,
+            Position(x: 2, y: 5): TileType.pinkItem,
+            Position(x: 12, y: 5): TileType.blueItem,
             Position(x: 3, y: 3): TileType.purpleItem,
-            Position(x: 89, y: 65): TileType.redItem,
-            Position(x: 40, y: 47): TileType.pinkItem,
-            Position(x: 59, y: 25): TileType.pinkItem,
-            Position(x: 92, y: 18): TileType.blueItem,
-            Position(x: 74, y: 49): TileType.redItem,
-            Position(x: 100, y: 5): TileType.purpleItem,
+            Position(x: 8, y: 6): TileType.redItem,
+            Position(x: 14, y: 7): TileType.pinkItem,
             Position(x: 0, y: 0): TileType.blueItem
         ]
         let gameState = GameState(filledTiles: itemTiles)
