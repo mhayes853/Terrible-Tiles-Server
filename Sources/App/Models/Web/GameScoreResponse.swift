@@ -8,7 +8,7 @@
 import Foundation
 
 /// Socket response for telling the player their final score
-struct GameScoreResponse: GameSocketResponse {
+struct GameScoreResponse: Encodable {
     let gameId: UUID
     let playerScore: Score
     let topScores: [Score]

@@ -14,16 +14,16 @@ class TestGameScoring: XCTestCase {
     
     func testEmptyScoreOnlyUsesTimeFactor() {
         let (start, end) = getDatesFromTimeOffsets(offset: fiveMinutes)
-        let gameState = GameStateInfo(itemScore: 0, createdAt: start)
-        let finalScore = gameState.calculatefinalScore(endingTime: end)
-        XCTAssertEqual(finalScore.score, 60)
+        let gameState = GameState(itemScore: 0, startedAt: start)
+        let finalScore = gameState.calculateFinalScore(endingDate: end)
+        XCTAssertEqual(finalScore, 60)
     }
     
     func testFinalScoreIncludesItemScore() {
         let (start, end) = getDatesFromTimeOffsets(offset: fiveMinutes)
-        let gameState = GameStateInfo(itemScore: 50, createdAt: start)
-        let finalScore = gameState.calculatefinalScore(endingTime: end)
-        XCTAssertEqual(finalScore.score, 110)
+        let gameState = GameState(itemScore: 50, startedAt: start)
+        let finalScore = gameState.calculateFinalScore(endingDate: end)
+        XCTAssertEqual(finalScore, 110)
     }
     
     private func getDatesFromTimeOffsets(offset: TimeInterval) -> (Date, Date) {

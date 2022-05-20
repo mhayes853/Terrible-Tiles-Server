@@ -8,9 +8,8 @@
 import Foundation
 
 /// The response of the current game state that the client recieves
-struct GameStateResponse: GameSocketResponse {
-    let gameId: UUID
+struct GameStateResponse: Encodable {
     let filledTiles: [Position: TileType]
     let playerPosition: Position
-    let nextActionKey: UUID
+    let isServerResponse: Bool
 }

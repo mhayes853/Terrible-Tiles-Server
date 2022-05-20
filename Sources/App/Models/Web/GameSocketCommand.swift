@@ -11,9 +11,7 @@ import Foundation
 
 /// Expected form of command data from a socket connection
 struct GameSocketCommand: Decodable {
-    let gameId: UUID
     let inputCommand: InputCommand
-    let nextActionKey: UUID
 }
 
 // MARK: - Error
