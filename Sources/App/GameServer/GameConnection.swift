@@ -10,45 +10,38 @@ import WebSocketKit
 
 // MARK: - Functionality
 
-/// Namespace for executing Game Server Functionality
+/// Game Connection State
 struct GameConnection {
+    private let serverState = ConnectionState()
+    private let ws: WebSocket
     
-    /// Procedurally starts a game on the server, returns the final score when done
-    static func runGame(ws: WebSocket) async throws -> Score {
-        let serverState = GameServerState()
-        
-        _ = ws.onClose.always { _ in
-            print("Connection Closed")
-        }
-        
-        ws.onText { ws, text in
-            await Self.handleSocketText(ws: ws, text: text, state: serverState)
-        }
-        
-        let response = GameStateResponse(
-            filledTiles: serverState.gameState.filledTiles,
-            playerPosition: serverState.gameState.playerPosition,
-            isServerResponse: false
-        )
-        try await ws.sendEncodable(response)
-        
-        try await runServerGameLoop(ws: ws, state: serverState)
-        let finalScore = serverState.gameState.calculateFinalScore()
-        return .init(id: serverState.gameId, score: finalScore, createdAt: serverState.gameState.startedAt)
+    init(ws: WebSocket) {
+        self.ws = ws
     }
     
-    private static func handleSocketText(ws: WebSocket, text: String, state: GameServerState) async {
+    /// Plays the game with the client
+    ///
+    /// Returns the final score once the game ends
+    func playGame() async throws -> Score {
+        // Initial state for the client
+        try await self.sendStateResponse()
+    
+        self.ws.onText { _, text in
+            await self.handleSocketText(text: text)
+        }
+        
+        try await self.runGameLoop()
+        return self.serverState.score
+    }
+}
+
+// MARK: - Player Handled Events (Movement, Leaving)
+
+extension GameConnection {
+    fileprivate func handleSocketText(text: String) async {
         do {
             let socketCommand = try GameSocketCommand(rawText: text)
-            try await state.gameLock.withLockAsync {
-                state.gameState.processInput(command: socketCommand.inputCommand)
-                let response = GameStateResponse(
-                    filledTiles: state.gameState.filledTiles,
-                    playerPosition: state.gameState.playerPosition,
-                    isServerResponse: false
-                )
-                try await ws.sendEncodable(response)
-            }
+            try await self.handleInputCommand(socketCommand.inputCommand)
         } catch is GameSocketCommand.CommandError {
             try? await ws.sendGameError(.malformedCommand)
         } catch {
@@ -56,11 +49,52 @@ struct GameConnection {
         }
     }
     
-    private static func runServerGameLoop(ws: WebSocket, state: GameServerState) async throws {
-        // TODO: - Implement
-        while !state.isGameOver {
-            try await delay(2)
-            try await ws.send("Server Ping")
+    private func handleInputCommand(_ command: InputCommand) async throws {
+        try await self.serverState.lock.lockedAsync {
+            self.serverState.gameState.processInput(command: command)
+            try await self.sendStateResponse()
+        }
+    }
+}
+
+// MARK: - Server Game Events (eg. Dropping tiles, Spawning items, etc.)
+
+extension GameConnection {
+    fileprivate func runGameLoop() async throws {
+        // TODO: - Implement Game State Modifications
+        while !self.serverState.isGameOverWithLock {
+            // This inner loop makes sure we only wait at most 0.1 seconds before
+            // sending back the final score response to the player on their death.
+            for i in 1...100 {
+                try await delay(seconds: 0.1)
+                guard !self.serverState.isGameOverWithLock else { break }
+                
+                if i.isMultiple(of: 100) {
+                    try await self.spawnItems()
+                } else if i.isMultiple(of: 50) {
+                    try await self.pushBackPlayer()
+                } else if i.isMultiple(of: 10) {
+                    try await self.dropRandomTile()
+                }
+            }
+        }
+    }
+    
+    private func dropRandomTile() async throws {
+        try await self.serverState.lock.lockedAsync {
+            try await self.ws.send("Tile Dropped!")
+        }
+    }
+    
+    private func spawnItems() async throws {
+        try await self.serverState.lock.lockedAsync {
+            try await self.ws.send("Spawning Items!")
+        }
+    }
+    
+    private func pushBackPlayer() async throws {
+        try await self.serverState.lock.lockedAsync {
+            try await self.ws.send("Pushing Back Player!")
         }
     }
 }
@@ -68,15 +102,35 @@ struct GameConnection {
 // MARK: - Helper Struct
 
 extension GameConnection {
-    fileprivate struct GameServerState {
-        let gameId = UUID()
+    fileprivate struct ConnectionState {
+        let id = UUID()
         let gameState = GameState()
-        let gameLock = NSLock()
+        let lock = NSLock()
         
-        var isGameOver: Bool {
-            self.gameLock.lock()
-            defer { self.gameLock.unlock() }
-            return self.gameState.isDead
+        var isGameOverWithLock: Bool {
+            self.lock.locked { self.gameState.isDead }
         }
+        
+        var score: Score {
+            let scoreValue = gameState.calculateFinalScore()
+            return .init(id: self.id, score: scoreValue, createdAt: self.gameState.startedAt)
+        }
+        
+        func makeStateResponse(isServerAction: Bool = false) -> GameStateResponse {
+            return .init(
+                filledTiles: self.gameState.filledTiles,
+                playerPosition: self.gameState.playerPosition,
+                isServerResponse: isServerAction
+            )
+        }
+    }
+}
+
+// MARK: - Helpers
+
+extension GameConnection {
+    fileprivate func sendStateResponse(isServerAction: Bool = false) async throws {
+        let response = self.serverState.makeStateResponse(isServerAction: isServerAction)
+        try await self.ws.sendEncodable(response)
     }
 }

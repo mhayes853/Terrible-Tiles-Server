@@ -23,7 +23,7 @@ class GameController: RouteCollection {
     
     private func handleGameConnection(req: Request, ws: WebSocket) async {
         do {
-            let finalScore = try await GameConnection.runGame(ws: ws)
+            let finalScore = try await GameConnection(ws: ws).playGame()
             let topScores = try await self.scoresService.topScores()
             let response = GameScoreResponse(gameId: finalScore.id, playerScore: finalScore, topScores: topScores)
             try await ws.sendEncodable(response)
