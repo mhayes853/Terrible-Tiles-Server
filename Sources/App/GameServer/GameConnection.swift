@@ -82,19 +82,19 @@ extension GameConnection {
     
     private func dropRandomTile() async throws {
         try await self.serverState.lock.lockedAsync {
-            try await self.ws.send("Tile Dropped!")
+            try await self.sendStateResponse()
         }
     }
     
     private func spawnItems() async throws {
         try await self.serverState.lock.lockedAsync {
-            try await self.ws.send("Spawning Items!")
+            try await self.sendStateResponse()
         }
     }
     
     private func pushBackPlayer() async throws {
         try await self.serverState.lock.lockedAsync {
-            try await self.ws.send("Pushing Back Player!")
+            try await self.sendStateResponse()
         }
     }
 }
