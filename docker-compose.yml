@@ -19,7 +19,7 @@ x-shared_environment: &shared_environment
   
 services:
   app:
-    image: terrible-tiles-backend:latest
+    image: terrible-tiles:latest
     build:
       context: .
     environment:

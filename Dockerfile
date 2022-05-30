@@ -45,6 +45,9 @@ RUN [ -d /build/Resources ] && { mv /build/Resources ./Resources && chmod -R a-w
 # ================================
 FROM ubuntu:focal
 
+# Env values
+RUN export SQLITE_PATH=db.sqlite && export AMOUNT_TOP_SCORES=10
+
 # Make sure we can access the sqlite shared object
 RUN apt update && apt install -y sqlite3 libsqlite3-dev
 
