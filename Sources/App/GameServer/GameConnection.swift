@@ -83,21 +83,21 @@ extension GameConnection {
     }
     
     private func dropRandomTile() async throws {
-        try await self.serverState.lock.lockedAsync {
-            self.serverState.gameState.dropTile()
-            try await self.sendStateResponse()
-        }
+        try await self.runLockedServerGameStateAction(self.serverState.gameState.dropTile)
     }
     
     private func spawnItems() async throws {
-        try await self.serverState.lock.lockedAsync {
-            try await self.sendStateResponse()
-        }
+        try await self.runLockedServerGameStateAction { }
     }
     
     private func pushBackPlayer() async throws {
+        try await self.runLockedServerGameStateAction(self.serverState.gameState.pushBackPlayer)
+    }
+    
+    private func runLockedServerGameStateAction(_ fn: () -> Void) async throws {
         try await self.serverState.lock.lockedAsync {
-            try await self.sendStateResponse()
+            fn()
+            try await self.sendStateResponse(isServerAction: true)
         }
     }
 }
@@ -127,7 +127,7 @@ extension GameConnection {
             return .init(
                 filledTiles: filledTiles,
                 playerPosition: self.gameState.playerPosition,
-                isServerResponse: isServerAction
+                isServerAction: isServerAction
             )
         }
     }

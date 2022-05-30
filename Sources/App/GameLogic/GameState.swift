@@ -40,6 +40,12 @@ class GameState {
         self.updateGameStatus()
     }
     
+    func pushBackPlayer() {
+        let amount = Constants.pushBackRange.randomElement()!
+        self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - amount, 0))
+        self.updateGameStatus()
+    }
+    
     private func findRandomUnfilledTilePosition() -> Position? {
         guard self.filledTiles.count != Constants.totalTiles else { return nil }
         
@@ -96,21 +102,13 @@ class GameState {
     private func updatePlayerPosition(_ command: InputCommand) {
         switch command {
         case .moveUp:
-            if self.playerPosition.y > 0 {
-                self.playerPosition = .init(x: self.playerPosition.x, y: self.playerPosition.y - 1)
-            }
+            self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - 1, 0))
         case .moveDown:
-            if self.playerPosition.y < Constants.maxRows - 1 {
-                self.playerPosition = .init(x: self.playerPosition.x, y: self.playerPosition.y + 1)
-            }
+            self.playerPosition = .init(x: self.playerPosition.x, y: min(self.playerPosition.y + 1, Constants.maxRows - 1))
         case .moveLeft:
-            if self.playerPosition.x > 0 {
-                self.playerPosition = .init(x: self.playerPosition.x - 1, y: self.playerPosition.y)
-            }
+            self.playerPosition = .init(x: max(self.playerPosition.x - 1, 0), y: self.playerPosition.y)
         case .moveRight:
-            if self.playerPosition.x < Constants.maxCols - 1 {
-                self.playerPosition = .init(x: self.playerPosition.x + 1, y: self.playerPosition.y)
-            }
+            self.playerPosition = .init(x: min(self.playerPosition.x + 1, Constants.maxCols - 1), y: self.playerPosition.y)
         default:
             return
         }
@@ -135,6 +133,7 @@ extension GameState {
         static let maxRows = 15
         static let maxCols = 25
         static let totalTiles = maxCols * maxRows
+        static let pushBackRange = 2..<5
     }
 }
 
