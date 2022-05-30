@@ -114,12 +114,15 @@ extension GameConnection {
         let lock = NSLock()
         
         var isGameOverWithLock: Bool {
-            self.lock.locked { self.gameState.isDead }
+            self.lock.locked { self.gameState.isGameOver }
         }
         
         var score: Score {
-            let scoreValue = gameState.calculateFinalScore()
-            return .init(id: self.id, score: scoreValue, createdAt: self.gameState.startedAt)
+            return .init(
+                id: self.id,
+                score: gameState.finalScoreNumber,
+                createdAt: self.gameState.startedAt
+            )
         }
         
         func makeStateResponse(isServerAction: Bool = false) -> GameStateResponse {
@@ -130,6 +133,7 @@ extension GameConnection {
             return .init(
                 filledTiles: filledTiles,
                 playerPosition: self.gameState.playerPosition,
+                bossHP: self.gameState.bossRemainingHP,
                 isServerAction: isServerAction
             )
         }

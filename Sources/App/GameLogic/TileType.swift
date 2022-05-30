@@ -17,7 +17,7 @@ enum TileType: String, Codable, CaseIterable {
 }
 
 extension TileType {
-    var scoreValue: Int {
+    var bossDamageValue: Int {
         switch self {
         case .redItem:
             return 1

@@ -14,24 +14,37 @@ class GameState {
     private(set) var filledTiles = Defaults.filledTiles
     private(set) var playerPosition = Defaults.playerPosition
     private(set) var isDead = Defaults.isDead
-    private(set) var itemScore = Defaults.itemScore
+    private(set) var bossDamageDealt = Defaults.bossDamageDealt
     private(set) var startedAt = Defaults.startedAt
-    private(set) var rngFactor = Defaults.rngFactor
+    private(set) var totalItemsCollected = Defaults.itemsCollected
+    private(set) var totalMoves = Defaults.totalMoves
     
     init(
         filledTiles: [Position: TileType] = Defaults.filledTiles,
         playerPosition: Position = Defaults.playerPosition,
         isDead: Bool = Defaults.isDead,
-        itemScore: Int = Defaults.itemScore,
+        itemScore: Int = Defaults.bossDamageDealt,
         startedAt: Date = Defaults.startedAt,
-        rngFactor: RNGFactor = Defaults.rngFactor
+        totalItemsCollected: Int = Defaults.itemsCollected,
+        totalMoves: Int = Defaults.totalMoves
     ) {
         self.filledTiles = filledTiles
         self.playerPosition = playerPosition
         self.isDead = isDead
-        self.itemScore = itemScore
+        self.bossDamageDealt = itemScore
         self.startedAt = startedAt
-        self.rngFactor = rngFactor
+        self.totalItemsCollected = totalItemsCollected
+        self.totalMoves = totalMoves
+    }
+    
+    /// A game is over if the player is dead or the boss is defeated
+    var isGameOver: Bool {
+        self.isDead || self.bossDamageDealt >= Constants.bossHP
+    }
+    
+    /// Remaining Boss HP
+    var bossRemainingHP: Int {
+        Constants.bossHP - self.bossDamageDealt
     }
     
     /// Adds a random position to filledTiles with a "void" type
@@ -49,9 +62,9 @@ class GameState {
     
     /// Spawns items randomly on the board
     ///
-    /// The number of items spawned is 3% the amount of all unfilled tiles on the game board
+    /// The number of items spawned is 6% the amount of all unfilled tiles on the game board
     func runGenerateItemsEvent() {
-        let itemsSpawned = Int(Double(Constants.totalTiles - self.filledTiles.count) * Constants.unfilledTilesToItemsGeneratedPercentage)
+        let itemsSpawned = Int(Double(Constants.totalTiles - self.filledTiles.count) * Constants.itemSpawnRate)
         var itemsLeftToSpawn = itemsSpawned
         
         // We shuffle the items list so we the choosing priority is "fair"
@@ -71,10 +84,11 @@ class GameState {
     fileprivate func updateGameStatus() {
         guard let playerTile = self.filledTiles[self.playerPosition] else { return }
         if playerTile != .void {
-            self.itemScore += playerTile.scoreValue
+            self.bossDamageDealt = min(self.bossDamageDealt + playerTile.bossDamageValue, Constants.bossHP)
+            self.totalItemsCollected += 1
             self.filledTiles.removeValue(forKey: self.playerPosition)
         } else {
-            // self.isDead = true
+            self.isDead = true
         }
     }
 }
@@ -97,6 +111,8 @@ extension GameState {
     }
     
     private func movePlayer(_ command: InputCommand) {
+        let originalPosition = self.playerPosition
+        
         switch command {
         case .moveUp:
             self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - 1, 0))
@@ -108,6 +124,11 @@ extension GameState {
             self.playerPosition = .init(x: min(self.playerPosition.x + 1, Constants.maxCols - 1), y: self.playerPosition.y)
         default:
             return
+        }
+        
+        // Walking against a wall does not increase movement count
+        if originalPosition != self.playerPosition {
+            self.totalMoves += 1
         }
     }
 }
@@ -186,8 +207,10 @@ extension GameState {
         
         static let pushBackEventRange = 2..<5
         
-        static let unfilledTilesToItemsGeneratedPercentage = 0.06
+        static let itemSpawnRate = 0.045
         static let itemTileTypes = [TileType.blueItem, TileType.redItem, TileType.purpleItem, TileType.pinkItem]
+        
+        static let bossHP = 500
     }
 }
 
@@ -198,9 +221,10 @@ extension GameState {
         static let filledTiles = [Position: TileType]()
         static let playerPosition = Position(x: 12, y: 7)
         static let isDead = false
-        static let itemScore = 0
+        static let bossDamageDealt = 0
         static let startedAt = Date.now
-        static let rngFactor = RNGFactor.time
+        static let itemsCollected = 0
+        static let totalMoves = 0
     }
 }
 

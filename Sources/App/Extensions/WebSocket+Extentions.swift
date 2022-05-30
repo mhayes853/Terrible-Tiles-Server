@@ -13,7 +13,7 @@ import NIOWebSocket
 
 extension WebSocket {
     func sendEncodable<T: Encodable>(_ data: T) async throws {
-        let encoded = try JSONEncoder().encode(data)
+        let encoded = try JSONEncoder.defaultEncoder.encode(data)
         try await self.send([UInt8](encoded))
     }
 }

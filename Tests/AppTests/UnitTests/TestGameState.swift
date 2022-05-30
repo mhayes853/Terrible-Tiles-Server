@@ -180,6 +180,26 @@ class TestGameState: XCTestCase {
         )
     }
     
+    func testTotalMovesUpdatesProperly() {
+        let gameState = GameState()
+        
+        gameState.processInput(command: .moveUp)
+        
+        XCTAssertEqual(gameState.totalMoves, 1)
+       
+        for _ in 0..<3 {
+            gameState.processInput(command: .moveLeft)
+        }
+        
+        XCTAssertEqual(gameState.totalMoves, 4)
+    }
+    
+    func testTotalMovesDoesNotUpdateWhenAtBoundry() {
+        let gameState = GameState(playerPosition: .init(x: GameState.Constants.maxCols - 1, y: 0))
+        gameState.processInput(command: .moveRight)
+        XCTAssertEqual(gameState.totalMoves, 0)
+    }
+    
     func testSquareMovement() {
         let gameState = GameState()
         gameState.moveRepeatedly(amountTimes: 4, command: .moveLeft)
@@ -228,12 +248,41 @@ class TestGameState: XCTestCase {
         for tile in itemTiles {
             gameState.testCollectItem(itemPosition: tile.key, itemType: tile.value)
         }
+        
+        XCTAssertEqual(gameState.totalItemsCollected, itemTiles.count)
     }
     
     func testVoidTileKillsPlayer() {
         let gameState = GameState(filledTiles: [basicItemPosition: .void])
         gameState.moveTo(position: basicItemPosition)
         XCTAssertTrue(gameState.isDead)
+    }
+    
+    func testGettingMaxItemScoreEndsGame() {
+        var itemTiles = [Position: TileType]()
+        for i in 0..<(GameState.Constants.bossHP / 10) {
+            let pos = Position(x: i % GameState.Constants.maxCols, y: i % GameState.Constants.maxRows)
+            itemTiles[pos] = .pinkItem
+        }
+        
+        let gameState = GameState(filledTiles: itemTiles)
+        
+        for tile in itemTiles {
+            gameState.moveTo(position: tile.key)
+        }
+        
+        XCTAssertTrue(gameState.isGameOver)
+    }
+    
+    func testItemScoreIsCappedAtMax() {
+        let itemPos = Position(x: GameState.Constants.maxCols - 1, y: GameState.Constants.maxRows - 1)
+        let gameState = GameState(
+            filledTiles: [itemPos: .purpleItem],
+            itemScore: GameState.Constants.bossHP - 1
+        )
+        
+        gameState.moveTo(position: itemPos)
+        XCTAssertEqual(gameState.bossDamageDealt, GameState.Constants.bossHP)
     }
     
 }
@@ -262,9 +311,11 @@ private extension GameState {
     }
     
     func testCollectItem(itemPosition: Position, itemType: TileType) {
-        let tempScore = self.itemScore
+        let prevCollected = self.totalItemsCollected
+        let tempScore = self.bossDamageDealt
         self.moveTo(position: itemPosition)
-        XCTAssertEqual(self.itemScore, tempScore + itemType.scoreValue)
+        XCTAssertEqual(self.bossDamageDealt, tempScore + itemType.bossDamageValue)
+        XCTAssertEqual(prevCollected + 1, self.totalItemsCollected)
         XCTAssertNil(self.filledTiles[self.playerPosition])
     }
     
