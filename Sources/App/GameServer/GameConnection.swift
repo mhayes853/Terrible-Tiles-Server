@@ -61,6 +61,9 @@ extension GameConnection {
 
 extension GameConnection {
     fileprivate func runGameLoop() async throws {
+        // The player would expect some items to be nicely generated for them to start the game...
+        try await self.runLockedServerGameStateEvent(self.serverState.gameState.runGenerateItemsEvent)
+        
         while !self.serverState.isGameOverWithLock {
             // This inner loop makes sure we only wait at most 0.1 seconds before
             // sending back the final score response to the player on their death.
@@ -83,18 +86,18 @@ extension GameConnection {
     }
     
     private func dropRandomTile() async throws {
-        try await self.runLockedServerGameStateAction(self.serverState.gameState.dropTile)
+        try await self.runLockedServerGameStateEvent(self.serverState.gameState.runDropTileEvent)
     }
     
     private func spawnItems() async throws {
-        try await self.runLockedServerGameStateAction { }
+        try await self.runLockedServerGameStateEvent(self.serverState.gameState.runGenerateItemsEvent)
     }
     
     private func pushBackPlayer() async throws {
-        try await self.runLockedServerGameStateAction(self.serverState.gameState.pushBackPlayer)
+        try await self.runLockedServerGameStateEvent(self.serverState.gameState.runPushBackPlayerEvent)
     }
     
-    private func runLockedServerGameStateAction(_ fn: () -> Void) async throws {
+    private func runLockedServerGameStateEvent(_ fn: () -> Void) async throws {
         try await self.serverState.lock.lockedAsync {
             fn()
             try await self.sendStateResponse(isServerAction: true)

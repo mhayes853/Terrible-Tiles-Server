@@ -8,7 +8,7 @@
 import Foundation
 
 /// All the forms a tile can be, minus the base form
-enum TileType: String, Codable {
+enum TileType: String, Codable, CaseIterable {
     case redItem = "RED_ITEM"
     case blueItem = "BLUE_ITEM"
     case purpleItem = "PURPLE_ITEM"
@@ -29,6 +29,21 @@ extension TileType {
             return 10
         default:
             return -1
+        }
+    }
+    
+    var spawnPercentage: Double {
+        switch self {
+        case .redItem:
+            return 0.5
+        case .blueItem:
+            return 0.2
+        case .purpleItem:
+            return 0.2
+        case .pinkItem:
+            return 0.1
+        default:
+            return 0.0
         }
     }
 }

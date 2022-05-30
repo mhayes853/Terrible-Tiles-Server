@@ -34,57 +34,54 @@ class GameState {
         self.rngFactor = rngFactor
     }
     
-    func dropTile() {
-        guard let dropPos = self.findRandomUnfilledTilePosition() else { return }
-        self.filledTiles[dropPos] = .void
+    /// Adds a random position to filledTiles with a "void" type
+    func runDropTileEvent() {
+        self.fillRandomTile(with: .void, excludingTypes: [.void])
         self.updateGameStatus()
     }
     
-    func pushBackPlayer() {
-        let amount = Constants.pushBackRange.randomElement()!
-        self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - amount, 0))
+    /// Pushes the player back 2-4 tiles decided randomly
+    func runPushBackPlayerEvent() {
+        let tileAmount = Constants.pushBackEventRange.randomElement()!
+        self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - tileAmount, 0))
         self.updateGameStatus()
     }
     
-    private func findRandomUnfilledTilePosition() -> Position? {
-        guard self.filledTiles.count != Constants.totalTiles else { return nil }
+    /// Spawns items randomly on the board
+    ///
+    /// The number of items spawned is 3% the amount of all unfilled tiles on the game board
+    func runGenerateItemsEvent() {
+        let itemsSpawned = Int(Double(Constants.totalTiles - self.filledTiles.count) * Constants.unfilledTilesToItemsGeneratedPercentage)
+        var itemsLeftToSpawn = itemsSpawned
         
-        let basePos = Position.random(in: 0..<Constants.maxCols, and: 0..<Constants.maxRows)
-        
-        for i in basePos.x..<Constants.maxCols {
-            if let pos = self.findUnfilledTilePosition(forColumn: i, rowStartOffset: basePos.y) {
-                return pos
+        // We shuffle the items list so we the choosing priority is "fair"
+        Constants.itemTileTypes.shuffled()
+            .map { item -> (Int, TileType) in
+                let amountToSpawn = Int(min(Double(itemsSpawned) * item.spawnPercentage, Double(itemsLeftToSpawn)))
+                itemsLeftToSpawn -= amountToSpawn
+                return (amountToSpawn, item)
             }
-        }
-        
-        for i in stride(from: basePos.x, to: -1, by: -1) {
-            if let pos = self.findUnfilledTilePosition(forColumn: i, rowStartOffset: basePos.y) {
-                return pos
+            .forEach { (spawnAmount, item) in
+                self.fillRandomTiles(with: item, amount: spawnAmount)
             }
-        }
         
-        // We should never hit here
-        return nil
+        self.updateGameStatus()
     }
     
-    private func findUnfilledTilePosition(forColumn x: Int, rowStartOffset: Int = 0) -> Position? {
-        for j in rowStartOffset..<Constants.maxRows {
-            let pos = Position(x: x, y: j)
-            if self.filledTiles[pos] == nil {
-                return pos
-            }
+    fileprivate func updateGameStatus() {
+        guard let playerTile = self.filledTiles[self.playerPosition] else { return }
+        if playerTile != .void {
+            self.itemScore += playerTile.scoreValue
+            self.filledTiles.removeValue(forKey: self.playerPosition)
+        } else {
+            // self.isDead = true
         }
-        
-        for j in stride(from: rowStartOffset, to: -1, by: -1) {
-            let pos = Position(x: x, y: j)
-            if self.filledTiles[pos] == nil {
-                return pos
-            }
-        }
-        
-        return nil
     }
-    
+}
+
+// MARK: - Player Input/Movement
+
+extension GameState {
     /// Update Game State based on the input command
     func processInput(command: InputCommand) {
         if command == .leave {
@@ -95,11 +92,11 @@ class GameState {
     }
     
     private func processMovement(_ command: InputCommand) {
-        self.updatePlayerPosition(command)
+        self.movePlayer(command)
         self.updateGameStatus()
     }
     
-    private func updatePlayerPosition(_ command: InputCommand) {
+    private func movePlayer(_ command: InputCommand) {
         switch command {
         case .moveUp:
             self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - 1, 0))
@@ -113,15 +110,68 @@ class GameState {
             return
         }
     }
+}
+
+// MARK: - Finding/Filling Open Tiles to place items or drop tiles
+
+extension GameState {
+    fileprivate func fillRandomTiles(with type: TileType, amount: Int, excludingTypes excluded: Set<TileType> = .init(TileType.allCases)) {
+        (0..<amount).forEach { _ in self.fillRandomTile(with: type, excludingTypes: excluded) }
+    }
     
-    private func updateGameStatus() {
-        guard let playerTile = self.filledTiles[self.playerPosition] else { return }
-        if playerTile != .void {
-            self.itemScore += playerTile.scoreValue
-            self.filledTiles.removeValue(forKey: self.playerPosition)
-        } else {
-            self.isDead = true
+    fileprivate func fillRandomTile(with type: TileType, excludingTypes excluded: Set<TileType> = .init(TileType.allCases)) {
+        guard let pos = self.findRandomOpenTilePosition(excludingTypes: excluded) else { return }
+        self.filledTiles[pos] = type
+    }
+    
+    private func findRandomOpenTilePosition(excludingTypes excluded: Set<TileType>) -> Position? {
+        guard self.filledTiles.count != Constants.totalTiles else { return nil }
+        
+        let basePos = Position.random(in: 0..<Constants.maxCols, and: 0..<Constants.maxRows)
+        
+        for i in basePos.x..<Constants.maxCols {
+            let searchPos = Position(x: i, y: basePos.y)
+            if let pos = self.findRandomOpenTilePositionInColumn(basePosition: searchPos, excludingTypes: excluded) {
+                return pos
+            }
         }
+        
+        for i in stride(from: basePos.x, to: -1, by: -1) {
+            let searchPos = Position(x: i, y: basePos.y)
+            if let pos = self.findRandomOpenTilePositionInColumn(basePosition: searchPos, excludingTypes: excluded) {
+                return pos
+            }
+        }
+        
+        // This would mean that every tile is filled with something (which should be handled by the guard?)
+        return nil
+    }
+    
+    private func findRandomOpenTilePositionInColumn(basePosition base: Position, excludingTypes excluded: Set<TileType>) -> Position? {
+        for i in base.y..<Constants.maxRows {
+            let pos = Position(x: base.x, y: i)
+            if self.isOpenTilePosition(position: pos, excludingTypes: excluded) {
+                return pos
+            }
+        }
+        
+        for i in stride(from: base.y, to: -1, by: -1) {
+            let pos = Position(x: base.x, y: i)
+            if self.isOpenTilePosition(position: pos, excludingTypes: excluded) {
+                return pos
+            }
+        }
+        
+        return nil
+    }
+    
+    private func isOpenTilePosition(position: Position, excludingTypes excluded: Set<TileType>) -> Bool {
+        let isInRowRange = (0..<Constants.maxRows).contains(position.y)
+        let isInColRange = (0..<Constants.maxCols).contains(position.x)
+        
+        guard isInRowRange && isInColRange else { return false }
+        guard let item = self.filledTiles[position] else { return true }
+        return !excluded.contains(item)
     }
 }
 
@@ -129,11 +179,15 @@ class GameState {
 
 extension GameState {
     enum Constants {
-        // An Odd number can keep the positioning somewhat symetrical
+        // An Odd number gives the board a clear "middle" position
         static let maxRows = 15
         static let maxCols = 25
         static let totalTiles = maxCols * maxRows
-        static let pushBackRange = 2..<5
+        
+        static let pushBackEventRange = 2..<5
+        
+        static let unfilledTilesToItemsGeneratedPercentage = 0.06
+        static let itemTileTypes = [TileType.blueItem, TileType.redItem, TileType.purpleItem, TileType.pinkItem]
     }
 }
 

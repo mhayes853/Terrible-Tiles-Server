@@ -1,6 +1,7 @@
 const playerX = document.getElementById("player-x");
 const playerY = document.getElementById("player-y");
 const dropped = document.getElementById("dropped");
+const items = document.getElementById("items")
 const countTimer = document.getElementById("count-timer");
 const score = document.getElementById("score");
 
@@ -16,14 +17,19 @@ ws.onmessage = async (e) => {
     if (data.playerPosition != undefined) {
         playerX.innerHTML = `x: ${data.playerPosition.x}`;
         playerY.innerHTML = `y: ${data.playerPosition.y}`;
-        dropped.innerHTML = data.filledTiles
-            .map(tile => `(${tile.position.x}, ${tile.position.y}, ${tile.type})`)
-            .join("\n")
+        dropped.innerHTML = filterMapJoinTiles(data.filledTiles, (tile) => tile.type === "VOID");
+        items.innerHTML = filterMapJoinTiles(data.filledTiles, (tile) => tile.type !== "VOID");
     }
     
     if (data.playerScore != undefined) {
         isGameOver = true
     }
+}
+
+const filterMapJoinTiles = (tiles, condition) => {
+    return tiles.filter(tile => condition(tile))
+        .map(tile => `(${tile.position.x}, ${tile.position.y}, ${tile.type})`)
+        .join(" ")
 }
 
 document.onkeydown = (e) => {
