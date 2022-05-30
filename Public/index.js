@@ -46,6 +46,9 @@ document.onkeydown = (e) => {
         case "ArrowDown":
             sendData({ inputCommand: "MOVE_DOWN" });
             break;
+        case "a":
+            sendData({ inputCommand: "INVALID" });
+            break;
     }
 }
 

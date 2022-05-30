@@ -49,7 +49,7 @@ class GameState {
     
     /// Adds a random position to filledTiles with a "void" type
     func runDropTileEvent() {
-        self.fillRandomTile(with: .void, excludingTypes: [.void])
+        self.fillRandomTile(with: .void, excludingTypes: [.void]) // Make sure existing items can be dropped
         self.updateGameStatus()
     }
     
