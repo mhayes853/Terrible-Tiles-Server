@@ -9,7 +9,14 @@ import Foundation
 
 /// The response of the current game state that the client recieves
 struct GameStateResponse: Encodable {
-    let filledTiles: [Position: TileType]
+    let filledTiles: [Tile]
     let playerPosition: Position
     let isServerResponse: Bool
+}
+
+extension GameStateResponse {
+    struct Tile: Encodable {
+        let position: Position
+        let type: TileType
+    }
 }

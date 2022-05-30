@@ -34,6 +34,51 @@ class GameState {
         self.rngFactor = rngFactor
     }
     
+    func dropTile() {
+        guard let dropPos = self.findRandomUnfilledTilePosition() else { return }
+        self.filledTiles[dropPos] = .void
+        self.updateGameStatus()
+    }
+    
+    private func findRandomUnfilledTilePosition() -> Position? {
+        guard self.filledTiles.count != Constants.totalTiles else { return nil }
+        
+        let basePos = Position.random(in: 0..<Constants.maxCols, and: 0..<Constants.maxRows)
+        
+        for i in basePos.x..<Constants.maxCols {
+            if let pos = self.findUnfilledTilePosition(forColumn: i, rowStartOffset: basePos.y) {
+                return pos
+            }
+        }
+        
+        for i in stride(from: basePos.x, to: -1, by: -1) {
+            if let pos = self.findUnfilledTilePosition(forColumn: i, rowStartOffset: basePos.y) {
+                return pos
+            }
+        }
+        
+        // We should never hit here
+        return nil
+    }
+    
+    private func findUnfilledTilePosition(forColumn x: Int, rowStartOffset: Int = 0) -> Position? {
+        for j in rowStartOffset..<Constants.maxRows {
+            let pos = Position(x: x, y: j)
+            if self.filledTiles[pos] == nil {
+                return pos
+            }
+        }
+        
+        for j in stride(from: rowStartOffset, to: -1, by: -1) {
+            let pos = Position(x: x, y: j)
+            if self.filledTiles[pos] == nil {
+                return pos
+            }
+        }
+        
+        return nil
+    }
+    
     /// Update Game State based on the input command
     func processInput(command: InputCommand) {
         if command == .leave {
@@ -75,10 +120,10 @@ class GameState {
         guard let playerTile = self.filledTiles[self.playerPosition] else { return }
         if playerTile != .void {
             self.itemScore += playerTile.scoreValue
+            self.filledTiles.removeValue(forKey: self.playerPosition)
         } else {
             self.isDead = true
         }
-        self.filledTiles.removeValue(forKey: self.playerPosition)
     }
 }
 
@@ -89,6 +134,7 @@ extension GameState {
         // An Odd number can keep the positioning somewhat symetrical
         static let maxRows = 15
         static let maxCols = 25
+        static let totalTiles = maxCols * maxRows
     }
 }
 
@@ -102,5 +148,13 @@ extension GameState {
         static let itemScore = 0
         static let startedAt = Date.now
         static let rngFactor = RNGFactor.time
+    }
+}
+
+// MARK: - Helpers
+
+private extension Position {
+    static func random(in xrange: Range<Int>, and yrange: Range<Int>) -> Self {
+        return .init(x: xrange.randomElement() ?? 0, y: yrange.randomElement() ?? 0)
     }
 }

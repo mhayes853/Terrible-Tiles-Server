@@ -234,7 +234,6 @@ class TestGameState: XCTestCase {
         let gameState = GameState(filledTiles: [basicItemPosition: .void])
         gameState.moveTo(position: basicItemPosition)
         XCTAssertTrue(gameState.isDead)
-        XCTAssertNil(gameState.filledTiles[gameState.playerPosition])
     }
     
 }

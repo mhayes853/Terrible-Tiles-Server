@@ -61,7 +61,6 @@ extension GameConnection {
 
 extension GameConnection {
     fileprivate func runGameLoop() async throws {
-        // TODO: - Implement Game State Modifications
         while !self.serverState.isGameOverWithLock {
             // This inner loop makes sure we only wait at most 0.1 seconds before
             // sending back the final score response to the player on their death.
@@ -78,10 +77,14 @@ extension GameConnection {
                 }
             }
         }
+        
+        // Make sure the client and server agree with each other on the final position
+        try await self.sendStateResponse()
     }
     
     private func dropRandomTile() async throws {
         try await self.serverState.lock.lockedAsync {
+            self.serverState.gameState.dropTile()
             try await self.sendStateResponse()
         }
     }
@@ -117,8 +120,12 @@ extension GameConnection {
         }
         
         func makeStateResponse(isServerAction: Bool = false) -> GameStateResponse {
+            let filledTiles = self.gameState.filledTiles.map { (pos, tile) in
+                GameStateResponse.Tile(position: pos, type: tile)
+            }
+            
             return .init(
-                filledTiles: self.gameState.filledTiles,
+                filledTiles: filledTiles,
                 playerPosition: self.gameState.playerPosition,
                 isServerResponse: isServerAction
             )
