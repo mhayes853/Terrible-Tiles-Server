@@ -15,7 +15,6 @@ class GameState {
     private(set) var playerPosition = Defaults.playerPosition
     private(set) var isDead = Defaults.isDead
     private(set) var bossDamageDealt = Defaults.bossDamageDealt
-    private(set) var startedAt = Defaults.startedAt
     private(set) var totalItemsCollected = Defaults.itemsCollected
     private(set) var totalMoves = Defaults.totalMoves
     
@@ -24,7 +23,6 @@ class GameState {
         playerPosition: Position = Defaults.playerPosition,
         isDead: Bool = Defaults.isDead,
         itemScore: Int = Defaults.bossDamageDealt,
-        startedAt: Date = Defaults.startedAt,
         totalItemsCollected: Int = Defaults.itemsCollected,
         totalMoves: Int = Defaults.totalMoves
     ) {
@@ -32,7 +30,6 @@ class GameState {
         self.playerPosition = playerPosition
         self.isDead = isDead
         self.bossDamageDealt = itemScore
-        self.startedAt = startedAt
         self.totalItemsCollected = totalItemsCollected
         self.totalMoves = totalMoves
     }
@@ -222,7 +219,6 @@ extension GameState {
         static let playerPosition = Position(x: 12, y: 7)
         static let isDead = false
         static let bossDamageDealt = 0
-        static let startedAt = Date.now
         static let itemsCollected = 0
         static let totalMoves = 0
     }

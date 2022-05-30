@@ -11,9 +11,11 @@ import Vapor
 /// Controller for recieving and sending game data back to the client
 class GameController: RouteCollection {
     private let scoresService: ScoresService
+    private let logger: Logger
     
-    init(_ scoresService: ScoresService) {
+    init(_ scoresService: ScoresService, _ logger: Logger) {
         self.scoresService = scoresService
+        self.logger = logger
     }
     
     func boot(routes: RoutesBuilder) throws {
@@ -31,6 +33,7 @@ class GameController: RouteCollection {
             try await ws.sendEncodable(response)
             try await ws.close()
         } catch {
+            self.logger.error("\(error)")
             try? await ws.closeWithErrorResponse(
                 gameErrorCode: .internalError,
                 socketErrorCode: .unexpectedServerError

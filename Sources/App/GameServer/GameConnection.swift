@@ -112,6 +112,7 @@ extension GameConnection {
         let id = UUID()
         let gameState = GameState()
         let lock = NSLock()
+        let startedAt = Date()
         
         var isGameOverWithLock: Bool {
             self.lock.locked { self.gameState.isGameOver }
@@ -121,7 +122,7 @@ extension GameConnection {
             return .init(
                 id: self.id,
                 score: gameState.finalScoreNumber,
-                createdAt: self.gameState.startedAt
+                createdAt: self.startedAt
             )
         }
         

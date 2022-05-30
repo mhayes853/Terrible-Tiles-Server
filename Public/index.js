@@ -1,3 +1,5 @@
+/* A simple test bench for testing game interactions */
+
 const playerX = document.getElementById("player-x");
 const playerY = document.getElementById("player-y");
 const dropped = document.getElementById("dropped");
@@ -22,7 +24,7 @@ ws.onmessage = async (e) => {
     }
     
     if (data.playerScore != undefined) {
-        isGameOver = true
+        isGameOver = true;
     }
 }
 
