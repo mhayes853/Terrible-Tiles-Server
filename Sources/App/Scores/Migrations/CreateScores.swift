@@ -22,7 +22,7 @@ struct CreateScores: AsyncMigration {
     }
     
     private func saveDummyScores(_ db: Database) async throws {
-        for _ in 0..<Env.amountTopScores {
+        for _ in 0..<AppConstants.amountTopScores {
             try await ScoreModel(id: nil, score: 0, createdAt: .now)
                 .save(on: db)
         }
