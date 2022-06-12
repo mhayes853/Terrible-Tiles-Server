@@ -25,12 +25,7 @@ class GameController: RouteCollection {
     
     private func handleGameConnection(req: Request, ws: WebSocket) async {
         do {
-            let finalScore = try await GameConnection(ws: ws).playGame()
-            try await self.scoresService.insertNew(score: finalScore)
-            
-            let topScores = try await self.scoresService.topScores()
-            let response = GameScoreResponse(gameId: finalScore.id, playerScore: finalScore, topScores: topScores)
-            try await ws.sendEncodable(response)
+            try await self.runGameConnection(ws: ws)
             try await ws.close()
         } catch {
             self.logger.error("\(error)")
@@ -39,5 +34,22 @@ class GameController: RouteCollection {
                 socketErrorCode: .unexpectedServerError
             )
         }
+    }
+    
+    private func runGameConnection(ws: WebSocket) async throws {
+        let gameActor = await GameActor(ws: ws)
+        let finalScore = try await GameConnection(gameActor: gameActor).playGame()
+        try await self.sendTopScoresResponse(playerScore: finalScore, ws: ws)
+    }
+    
+    private func sendTopScoresResponse(playerScore: Score, ws: WebSocket) async throws {
+        let response = try await self.makeTopScoresResponse(playerScore: playerScore)
+        try await ws.sendEncodable(response)
+    }
+    
+    private func makeTopScoresResponse(playerScore: Score) async throws -> GameScoreResponse {
+        try await self.scoresService.insertNew(score: playerScore)
+        let topScores = try await self.scoresService.topScores()
+        return .init(gameId: playerScore.id, playerScore: playerScore, topScores: topScores)
     }
 }
