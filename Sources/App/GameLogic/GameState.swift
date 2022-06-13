@@ -11,6 +11,7 @@ import Foundation
 
 /// Class Containing main game logic
 class GameState {
+    var currentInputs = Defaults.currentInputs
     private(set) var filledTiles = Defaults.filledTiles
     private(set) var playerPosition = Defaults.playerPosition
     private(set) var isDead = Defaults.isDead
@@ -19,6 +20,7 @@ class GameState {
     private(set) var totalMoves = Defaults.totalMoves
     
     init(
+        currentInputs: Set<InputCommand> = [],
         filledTiles: [Position: TileType] = Defaults.filledTiles,
         playerPosition: Position = Defaults.playerPosition,
         isDead: Bool = Defaults.isDead,
@@ -26,6 +28,7 @@ class GameState {
         totalItemsCollected: Int = Defaults.itemsCollected,
         totalMoves: Int = Defaults.totalMoves
     ) {
+        self.currentInputs = currentInputs
         self.filledTiles = filledTiles
         self.playerPosition = playerPosition
         self.isDead = isDead
@@ -42,6 +45,10 @@ class GameState {
     /// Remaining Boss HP
     var bossRemainingHP: Int {
         Constants.bossHP - self.bossDamageDealt
+    }
+    
+    func advance() {
+        self.currentInputs.forEach(self.processInput)
     }
     
     /// Adds a random position to filledTiles with a "void" type
@@ -111,9 +118,9 @@ extension GameState {
         let originalPosition = self.playerPosition
         
         switch command {
-        case .moveUp:
-            self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - 1, 0))
         case .moveDown:
+            self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - 1, 0))
+        case .moveUp:
             self.playerPosition = .init(x: self.playerPosition.x, y: min(self.playerPosition.y + 1, Constants.maxRows - 1))
         case .moveLeft:
             self.playerPosition = .init(x: max(self.playerPosition.x - 1, 0), y: self.playerPosition.y)
@@ -215,6 +222,7 @@ extension GameState {
 
 extension GameState {
     enum Defaults {
+        static let currentInputs = Set<InputCommand>()
         static let filledTiles = [Position: TileType]()
         static let playerPosition = Position(x: 12, y: 7)
         static let isDead = false

@@ -21,8 +21,8 @@ The boss itself has 500 HP, whether this was a fair amount could never be determ
 As time goes on I may (for fun) implement some of these features below...
 
 - [ ] Make the server only send back the tiles that changed on the board rather than the entire board itself
-- [ ] Make y-axis more accurate to moving up and down on a standard cartesian coordinate plane
+- [x] Make y-axis more accurate to moving up and down on a standard cartesian coordinate plane
 - [ ] Integrate mutliplayer, and maybe instead of a boss (looking back the boss kind of felt out of place to me), have players fight each other by collecting items
 - [ ] More scalable scoring system database instead of just using SQLite
 - [ ] Make an actual web (or iOS/macOS) client so the game can actually be played normally
-- [ ] Implement controls to allow for buttons to be held down on a client rather than forcing the client to send a socket command to move the player
+- [x] Implement controls to allow for buttons to be held down on a client rather than forcing the client to send a socket command to move the player

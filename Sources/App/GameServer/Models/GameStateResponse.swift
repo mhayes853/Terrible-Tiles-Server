@@ -14,7 +14,6 @@ struct GameStateResponse: Encodable {
     let filledTiles: [Tile]
     let playerPosition: Position
     let bossHP: Int
-    let isServerAction: Bool
 }
 
 // MARK: - Inner Tile Type

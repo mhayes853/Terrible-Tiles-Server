@@ -10,6 +10,8 @@ const score = document.getElementById("score");
 let secondsPassed = 0;
 let isGameOver = false;
 
+const controls = new Set();
+
 const ws = new WebSocket("ws://localhost:8080/game/connect");
 
 ws.onmessage = async (e) => {
@@ -34,28 +36,65 @@ const filterMapJoinTiles = (tiles, condition) => {
         .join(" ")
 }
 
+const MOVE_LEFT = "MOVE_LEFT";
+const MOVE_RIGHT = "MOVE_RIGHT";
+const MOVE_DOWN = "MOVE_DOWN";
+const MOVE_UP = "MOVE_UP";
+
 document.onkeydown = (e) => {
+    let shouldSendControls = false;
+    
     switch (event.key) {
         case "ArrowLeft":
-            sendData({ inputCommand: "MOVE_LEFT" });
+            if (controls.has(MOVE_LEFT)) return;
+            controls.add(MOVE_LEFT);
+            shouldSendControls = true;
             break;
         case "ArrowRight":
-            sendData({ inputCommand: "MOVE_RIGHT" });
+            if (controls.has(MOVE_RIGHT)) return;
+            controls.add(MOVE_RIGHT);
+            shouldSendControls = true;
             break;
         case "ArrowUp":
-            sendData({ inputCommand: "MOVE_UP" });
+            if (controls.has(MOVE_UP)) return;
+            controls.add(MOVE_UP);
+            shouldSendControls = true;
             break;
         case "ArrowDown":
-            sendData({ inputCommand: "MOVE_DOWN" });
+            if (controls.has(MOVE_DOWN)) return;
+            controls.add(MOVE_DOWN);
+            shouldSendControls = true;
             break;
-        case "a":
-            sendData({ inputCommand: "INVALID" });
+        default:
             break;
     }
+    
+    if (shouldSendControls) sendControls();
 }
 
-const sendData = (obj) => {
-    ws.send(JSON.stringify(obj));
+document.onkeyup = (e) => {
+    switch (event.key) {
+        case "ArrowLeft":
+            controls.delete(MOVE_LEFT);
+            break;
+        case "ArrowRight":
+            controls.delete(MOVE_RIGHT);
+            break;
+        case "ArrowUp":
+            controls.delete(MOVE_UP);
+            break;
+        case "ArrowDown":
+            controls.delete(MOVE_DOWN);
+            break;
+        default:
+            break;
+    }
+    
+    sendControls();
+}
+
+const sendControls = () => {
+    ws.send(JSON.stringify([...controls]));
 }
 
 setInterval(() => {

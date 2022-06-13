@@ -9,7 +9,7 @@ import Foundation
 import WebSocketKit
 
 /// Allows for synchronised actions on the game state
-actor GameActor {
+actor GameConnectionActor {
     let id = UUID()
     let gameState = GameState()
     let ws: WebSocket
@@ -34,34 +34,38 @@ actor GameActor {
 
 // MARK: - Server Events
 
-extension GameActor {
+extension GameConnectionActor {
+    func processPlayerInputs() async throws {
+        try await self.runRespondAction(self.gameState.advance)
+    }
+    
     func dropRandomTile() async throws {
-        try await self.runRespondAction(isServerAction: true, self.gameState.runDropTileEvent)
+        try await self.runRespondAction(self.gameState.runDropTileEvent)
     }
     
     func spawnNewItems() async throws {
-        try await self.runRespondAction(isServerAction: true, self.gameState.runGenerateItemsEvent)
+        try await self.runRespondAction(self.gameState.runGenerateItemsEvent)
     }
     
     func attackPlayer() async throws {
-        try await self.runRespondAction(isServerAction: true, self.gameState.runPushBackPlayerEvent)
+        try await self.runRespondAction(self.gameState.runPushBackPlayerEvent)
     }
 }
 
 // MARK: - Send State Response
 
-extension GameActor {
-    fileprivate func runRespondAction(isServerAction: Bool = false, _ action: () -> Void) async throws {
+extension GameConnectionActor {
+    fileprivate func runRespondAction(_ action: () -> Void) async throws {
         action()
-        try await sendCurrentStateResponse(isServerAction: isServerAction)
+        try await sendCurrentStateResponse()
     }
     
-    func sendCurrentStateResponse(isServerAction: Bool = false) async throws {
-        let response = self.makeStateResponse(isServerAction: isServerAction)
+    func sendCurrentStateResponse() async throws {
+        let response = self.makeStateResponse()
         try await self.ws.sendEncodable(response)
     }
     
-    private func makeStateResponse(isServerAction: Bool = false) -> GameStateResponse {
+    private func makeStateResponse() -> GameStateResponse {
         let filledTiles = self.gameState.filledTiles.map { (pos, tile) in
             GameStateResponse.Tile(position: pos, type: tile)
         }
@@ -69,27 +73,22 @@ extension GameActor {
         return .init(
             filledTiles: filledTiles,
             playerPosition: self.gameState.playerPosition,
-            bossHP: self.gameState.bossRemainingHP,
-            isServerAction: isServerAction
+            bossHP: self.gameState.bossRemainingHP
         )
     }
 }
 
 // MARK: - Handle player input
 
-private extension GameActor {
+private extension GameConnectionActor {
     func handleSocketText(_ text: String) async {
         do {
-            let socketCommand = try GameSocketCommand(rawText: text)
-            try await self.handleInputCommand(socketCommand.inputCommand)
-        } catch is GameSocketCommand.CommandError {
+            let socketCommands = try Set<InputCommand>(rawText: text)
+            self.gameState.currentInputs = socketCommands
+        } catch is GameServerError {
             try? await self.ws.sendGameError(.malformedCommand)
         } catch {
             try? await self.ws.sendGameError(.internalError)
         }
-    }
-    
-    private func handleInputCommand(_ command: InputCommand) async throws {
-        try await self.runRespondAction { self.gameState.processInput(command: command) }
     }
 }

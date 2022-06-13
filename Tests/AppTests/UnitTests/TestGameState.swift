@@ -21,27 +21,21 @@ class TestGameState: XCTestCase {
     func testSimpleMoveUp() {
         let gameState = GameState()
         
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y - 1
-        )
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: GameState.Defaults.playerPosition.y + 1)
         gameState.testSimpleMovement(command: .moveUp, expectedPosition: expectedPosition)
     }
     
     func testMoveUpMultipleTimes() {
         let gameState = GameState()
         
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y - 5
-        )
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: GameState.Defaults.playerPosition.y + 5)
         gameState.testSimpleMovement(amountTimes: 5, command: .moveUp, expectedPosition: expectedPosition)
     }
     
     func testMoveUpRespectsLimit() {
         let gameState = GameState()
         
-        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: 0)
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: GameState.Constants.maxRows - 1)
         gameState.testSimpleMovement(
             amountTimes: GameState.Constants.maxRows,
             command: .moveUp,
@@ -51,24 +45,21 @@ class TestGameState: XCTestCase {
     
     func testSimpleMoveLeft() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x - 1,
-            y: GameState.Defaults.playerPosition.y
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x - 1, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(command: .moveLeft, expectedPosition: expectedPosition)
     }
     
     func testMoveLeftMultipleTimes() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x - 10,
-            y: GameState.Defaults.playerPosition.y
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x - 10, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(amountTimes: 10, command: .moveLeft, expectedPosition: expectedPosition)
     }
     
     func testMoveLeftRespectsLimit() {
         let gameState = GameState()
+        
         let expectedPosition = Position(x: 0, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(
             amountTimes: GameState.Constants.maxCols,
@@ -79,28 +70,22 @@ class TestGameState: XCTestCase {
     
     func testSimpleMoveDown() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y + 1
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: GameState.Defaults.playerPosition.y - 1)
         gameState.testSimpleMovement(command: .moveDown, expectedPosition: expectedPosition)
     }
     
     func testMoveDownMultipleTimes() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x,
-            y: GameState.Defaults.playerPosition.y + 5
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: GameState.Defaults.playerPosition.y - 5)
         gameState.testSimpleMovement(amountTimes: 5, command: .moveDown, expectedPosition: expectedPosition)
     }
     
     func testMoveDownRespectsLimit() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x,
-            y: GameState.Constants.maxRows - 1
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x, y: 0)
         gameState.testSimpleMovement(
             amountTimes: GameState.Constants.maxRows,
             command: .moveDown,
@@ -110,24 +95,21 @@ class TestGameState: XCTestCase {
     
     func testSimpleMoveRight() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x + 1,
-            y: GameState.Defaults.playerPosition.y
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x + 1, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(command: .moveRight, expectedPosition: expectedPosition)
     }
     
     func testMoveRightMultipleTimes() {
         let gameState = GameState()
-        let expectedPosition = Position(
-            x: GameState.Defaults.playerPosition.x + 10,
-            y: GameState.Defaults.playerPosition.y
-        )
+        
+        let expectedPosition = Position(x: GameState.Defaults.playerPosition.x + 10, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(amountTimes: 10, command: .moveRight, expectedPosition: expectedPosition)
     }
     
     func testMoveRightRespectsLimit() {
         let gameState = GameState()
+        
         let expectedPosition = Position(x: GameState.Constants.maxCols - 1, y: GameState.Defaults.playerPosition.y)
         gameState.testSimpleMovement(
             amountTimes: GameState.Constants.maxCols,
@@ -138,7 +120,8 @@ class TestGameState: XCTestCase {
     
     func testUpLeftDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 4, y: 0)
+        
+        let expectedPosition = Position(x: 4, y: 14)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveLeft,
@@ -149,7 +132,8 @@ class TestGameState: XCTestCase {
     
     func testUpRightDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 20, y: 0)
+        
+        let expectedPosition = Position(x: 20, y: 14)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveRight,
@@ -160,7 +144,8 @@ class TestGameState: XCTestCase {
     
     func testDownLeftDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 4, y: 14)
+        
+        let expectedPosition = Position(x: 4, y: 0)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveLeft,
@@ -171,7 +156,8 @@ class TestGameState: XCTestCase {
     
     func testDownRightDiagonalMovement() {
         let gameState = GameState()
-        let expectedPosition = Position(x: 20, y: 14)
+        
+        let expectedPosition = Position(x: 20, y: 0)
         gameState.testDiagonalMovement(
             amountTimes: GameState.Constants.maxRows,
             c1: .moveRight,
@@ -285,6 +271,37 @@ class TestGameState: XCTestCase {
         XCTAssertEqual(gameState.bossDamageDealt, GameState.Constants.bossHP)
     }
     
+    func testSimpleAdvanceGameState() {
+        let gameState = GameState(currentInputs: [.moveLeft, .moveRight])
+        gameState.advance()
+        XCTAssertEqual(gameState.playerPosition, GameState.Defaults.playerPosition)
+    }
+    
+    func testAllMovementsAdvance() {
+        let gameState = GameState(currentInputs: [.moveLeft, .moveRight, .moveDown, .moveUp])
+        gameState.advance()
+        XCTAssertEqual(gameState.playerPosition, GameState.Defaults.playerPosition)
+    }
+    
+    func testDiagonalMovementAdvance() {
+        let gameState = GameState(currentInputs: [.moveLeft, .moveUp])
+        gameState.advance()
+        
+        let expected = Position(x: GameState.Defaults.playerPosition.x - 1, y: GameState.Defaults.playerPosition.y + 1)
+        XCTAssertEqual(gameState.playerPosition, expected)
+    }
+    
+    func testSingleDirectionRepeatedAdvance() {
+        let gameState = GameState(currentInputs: [.moveLeft])
+        
+        for _ in 0..<10 {
+            gameState.advance()
+        }
+        
+        let expected = Position(x: GameState.Defaults.playerPosition.x - 10, y: GameState.Defaults.playerPosition.y)
+        XCTAssertEqual(gameState.playerPosition, expected)
+    }
+    
 }
 
 // MARK: - Helpers
@@ -304,9 +321,9 @@ private extension GameState {
         }
         
         if self.playerPosition.y < position.y {
-            self.moveRepeatedly(amountTimes: position.y - self.playerPosition.y, command: .moveDown)
+            self.moveRepeatedly(amountTimes: position.y - self.playerPosition.y, command: .moveUp)
         } else {
-            self.moveRepeatedly(amountTimes: self.playerPosition.y - position.y, command: .moveUp)
+            self.moveRepeatedly(amountTimes: self.playerPosition.y - position.y, command: .moveDown)
         }
     }
     
