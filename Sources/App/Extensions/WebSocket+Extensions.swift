@@ -21,7 +21,7 @@ extension WebSocket {
 // MARK: - Sending Error Easily
 
 extension WebSocket {
-    func sendGameError(_ errorCode: GameSocketErrorCode) async throws {
+    func sendGameError(_ errorCode: GameConnectionErrorCode) async throws {
         try await self.sendEncodable(errorCode.defaultErrorResponse)
     }
 }
@@ -30,7 +30,7 @@ extension WebSocket {
 
 extension WebSocket {
     func closeWithErrorResponse(
-        gameErrorCode: GameSocketErrorCode,
+        gameErrorCode: GameConnectionErrorCode,
         socketErrorCode: WebSocketErrorCode = .policyViolation
     ) async throws {
         try await self.sendGameError(gameErrorCode)

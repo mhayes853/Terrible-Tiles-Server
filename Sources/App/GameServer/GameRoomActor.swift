@@ -9,17 +9,17 @@ import Foundation
 import WebSocketKit
 
 /// Allows for synchronised actions on the game state
-actor GameConnectionActor {
+actor GameRoomActor {
     let id = UUID()
     let gameState = GameState()
-    let ws: WebSocket
+    let connection: any GameConnection
     
     private let startedAt = Date()
     
-    init(ws: WebSocket) async {
-        self.ws = ws
-        self.ws.onText { [weak self] _, text in
-            await self?.handleSocketText(text)
+    init(connection: any GameConnection) async {
+        self.connection = connection
+        self.connection.observePlayerInput { [weak self] commands in
+            self?.gameState.currentInputs = commands
         }
     }
     
@@ -34,7 +34,7 @@ actor GameConnectionActor {
 
 // MARK: - Server Events
 
-extension GameConnectionActor {
+extension GameRoomActor {
     func processPlayerInputs() async throws {
         try await self.runRespondAction(self.gameState.advance)
     }
@@ -50,19 +50,19 @@ extension GameConnectionActor {
     func attackPlayer() async throws {
         try await self.runRespondAction(self.gameState.runPushBackPlayerEvent)
     }
+    
+    private func runRespondAction(_ action: () -> Void) async throws {
+        action()
+        try await sendCurrentStateResponse()
+    }
 }
 
 // MARK: - Send State Response
 
-extension GameConnectionActor {
-    fileprivate func runRespondAction(_ action: () -> Void) async throws {
-        action()
-        try await sendCurrentStateResponse()
-    }
-    
+extension GameRoomActor {
     func sendCurrentStateResponse() async throws {
         let response = self.makeStateResponse()
-        try await self.ws.sendEncodable(response)
+        try await self.connection.sendGameStateResponse(response)
     }
     
     private func makeStateResponse() -> GameStateResponse {
@@ -75,20 +75,5 @@ extension GameConnectionActor {
             playerPosition: self.gameState.playerPosition,
             bossHP: self.gameState.bossRemainingHP
         )
-    }
-}
-
-// MARK: - Handle player input
-
-private extension GameConnectionActor {
-    func handleSocketText(_ text: String) async {
-        do {
-            let socketCommands = try Set<InputCommand>(rawText: text)
-            self.gameState.currentInputs = socketCommands
-        } catch is GameServerError {
-            try? await self.ws.sendGameError(.malformedCommand)
-        } catch {
-            try? await self.ws.sendGameError(.internalError)
-        }
     }
 }

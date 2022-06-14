@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Main Model
 
 /// Socket specific game error codes
-enum GameSocketErrorCode: String, Encodable {
+enum GameConnectionErrorCode: String, Encodable {
     case invalidGameId = "INVALID_GAME_ID"
     case invalidStateKey = "INVALID_STATE_KEY"
     case malformedCommand = "MALFORMED_COMMAND"
@@ -19,7 +19,7 @@ enum GameSocketErrorCode: String, Encodable {
 
 // MARK: - Convienient Way to Construct Error Responses
 
-extension GameSocketErrorCode {
+extension GameConnectionErrorCode {
     var defaultErrorResponse: GameErrorResponse {
         .init(errorCode: self, message: self.defaultErrorMessage)
     }

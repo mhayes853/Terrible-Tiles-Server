@@ -10,12 +10,12 @@ import Foundation
 extension Set where Element == InputCommand {
     init(rawText: String) throws {
         guard let encodedCommands = rawText.data(using: .utf8) else {
-            throw GameServerError.socketInputError
+            throw GameConnectionError(errorCode: .malformedCommand)
         }
         
         let decodedCommands = try? JSONDecoder().decode(Self<InputCommand>.self, from: encodedCommands)
         guard let decodedCommands = decodedCommands else {
-            throw GameServerError.socketInputError
+            throw GameConnectionError(errorCode: .malformedCommand)
         }
         
         self = decodedCommands

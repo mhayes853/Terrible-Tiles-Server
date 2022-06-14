@@ -7,6 +7,6 @@
 
 import Foundation
 
-enum GameServerError: Error {
-    case socketInputError
+struct GameConnectionError: Error {
+    let errorCode: GameConnectionErrorCode
 }

@@ -9,6 +9,6 @@ import Foundation
 
 /// Error response for socket errors
 struct GameErrorResponse: Encodable {
-    let errorCode: GameSocketErrorCode
+    let errorCode: GameConnectionErrorCode
     let message: String
 }
