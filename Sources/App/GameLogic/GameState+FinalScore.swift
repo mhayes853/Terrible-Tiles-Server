@@ -9,13 +9,12 @@ import Foundation
 
 /// Calculating the final score
 ///
-/// We prioritize less movements and more damage (ie. we award an efficient playstyle)
+/// Less is more when it comes to getting a higher score (ie. we award an efficient playstyle)
 ///
 /// Efficiency can be judged by multiple factors in relation to the total damage dealt to the boss:
 ///     - The amount of tiles dropped
 ///     - The amount of movements made by the player
 ///     - The amount of items collected
-/// Less is more in terms of scoring for all of these factors, as less means the boss was defeated/damaged more efficiently
 ///
 /// Additionally, we subtract 40% of the player's score if they die and add an additional 40% if they defeat the boss
 extension GameState {

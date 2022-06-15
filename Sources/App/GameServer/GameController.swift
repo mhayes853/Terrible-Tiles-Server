@@ -37,8 +37,7 @@ class GameController: RouteCollection {
     }
     
     private func runGameConnection(ws: WebSocket) async throws {
-        let gameActor = await GameRoomActor(connection: ws)
-        let finalScore = try await GameRoom(gameActor: gameActor).playGame()
+        let finalScore = try await GameServerRoom(connection: ws).playGame()
         try await self.sendTopScoresResponse(playerScore: finalScore, ws: ws)
     }
     

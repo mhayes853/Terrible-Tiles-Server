@@ -11,7 +11,7 @@ import Foundation
 
 /// Class Containing main game logic
 class GameState {
-    var currentInputs = Defaults.currentInputs
+    var playerInputs = Defaults.playerInputs
     private(set) var filledTiles = Defaults.filledTiles
     private(set) var playerPosition = Defaults.playerPosition
     private(set) var isDead = Defaults.isDead
@@ -20,7 +20,7 @@ class GameState {
     private(set) var totalMoves = Defaults.totalMoves
     
     init(
-        currentInputs: Set<InputCommand> = [],
+        playerInputs: Set<InputCommand> = [],
         filledTiles: [Position: TileType] = Defaults.filledTiles,
         playerPosition: Position = Defaults.playerPosition,
         isDead: Bool = Defaults.isDead,
@@ -28,7 +28,7 @@ class GameState {
         totalItemsCollected: Int = Defaults.itemsCollected,
         totalMoves: Int = Defaults.totalMoves
     ) {
-        self.currentInputs = currentInputs
+        self.playerInputs = playerInputs
         self.filledTiles = filledTiles
         self.playerPosition = playerPosition
         self.isDead = isDead
@@ -47,34 +47,31 @@ class GameState {
         Constants.bossHP - self.bossDamageDealt
     }
     
-    func advance() {
-        self.currentInputs.forEach(self.processInput)
-    }
-    
     /// Adds a random position to filledTiles with a "void" type
-    func runDropTileEvent() {
+    func dropRandomTile() {
         self.fillRandomTile(with: .void, excludingTypes: [.void]) // Make sure existing items can be dropped
         self.updateGameStatus()
     }
     
     /// Pushes the player back 2-4 tiles decided randomly
-    func runPushBackPlayerEvent() {
-        let tileAmount = Constants.pushBackEventRange.randomElement()!
+    func attackPlayer() {
+        let tileAmount = Constants.attackPlayerRange.randomElement()!
         self.playerPosition = .init(x: self.playerPosition.x, y: max(self.playerPosition.y - tileAmount, 0))
         self.updateGameStatus()
     }
     
     /// Spawns items randomly on the board
     ///
-    /// The number of items spawned is 6% the amount of all unfilled tiles on the game board
-    func runGenerateItemsEvent() {
+    /// The number of items spawned is 4.5% the amount of all unfilled tiles on the game board
+    func spawnItems() {
         let itemsSpawned = Int(Double(Constants.totalTiles - self.filledTiles.count) * Constants.itemSpawnRate)
         var itemsLeftToSpawn = itemsSpawned
         
-        // We shuffle the items list so we the choosing priority is "fair"
+        // We shuffle the items list to make sure rarer items can still when less tiles remain
         Constants.itemTileTypes.shuffled()
             .map { item -> (Int, TileType) in
-                let amountToSpawn = Int(min(Double(itemsSpawned) * item.spawnPercentage, Double(itemsLeftToSpawn)))
+                let projectedSpawnAmount = Double(itemsSpawned) * item.spawnPercentage
+                let amountToSpawn = Int(min(projectedSpawnAmount, Double(itemsLeftToSpawn)))
                 itemsLeftToSpawn -= amountToSpawn
                 return (amountToSpawn, item)
             }
@@ -100,6 +97,11 @@ class GameState {
 // MARK: - Player Input/Movement
 
 extension GameState {
+    /// Updates Game State based on the current player inputs
+    func processCurrentInputs() {
+        self.playerInputs.forEach(self.processInput)
+    }
+    
     /// Update Game State based on the input command
     func processInput(command: InputCommand) {
         if command == .leave {
@@ -140,8 +142,14 @@ extension GameState {
 // MARK: - Finding/Filling Open Tiles to place items or drop tiles
 
 extension GameState {
-    fileprivate func fillRandomTiles(with type: TileType, amount: Int, excludingTypes excluded: Set<TileType> = .init(TileType.allCases)) {
-        (0..<amount).forEach { _ in self.fillRandomTile(with: type, excludingTypes: excluded) }
+    fileprivate func fillRandomTiles(
+        with type: TileType,
+        amount: Int,
+        excludingTypes excluded: Set<TileType> = .init(TileType.allCases)
+    ) {
+        for _ in 0..<amount {
+            self.fillRandomTile(with: type, excludingTypes: excluded)
+        }
     }
     
     fileprivate func fillRandomTile(with type: TileType, excludingTypes excluded: Set<TileType> = .init(TileType.allCases)) {
@@ -156,14 +164,14 @@ extension GameState {
         
         for i in basePos.x..<Constants.maxCols {
             let searchPos = Position(x: i, y: basePos.y)
-            if let pos = self.findRandomOpenTilePositionInColumn(basePosition: searchPos, excludingTypes: excluded) {
+            if let pos = self.findOpenTilePositionInCol(basePosition: searchPos, excludingTypes: excluded) {
                 return pos
             }
         }
         
         for i in stride(from: basePos.x, to: -1, by: -1) {
             let searchPos = Position(x: i, y: basePos.y)
-            if let pos = self.findRandomOpenTilePositionInColumn(basePosition: searchPos, excludingTypes: excluded) {
+            if let pos = self.findOpenTilePositionInCol(basePosition: searchPos, excludingTypes: excluded) {
                 return pos
             }
         }
@@ -172,7 +180,10 @@ extension GameState {
         return nil
     }
     
-    private func findRandomOpenTilePositionInColumn(basePosition base: Position, excludingTypes excluded: Set<TileType>) -> Position? {
+    private func findOpenTilePositionInCol(
+        basePosition base: Position,
+        excludingTypes excluded: Set<TileType>
+    ) -> Position? {
         for i in base.y..<Constants.maxRows {
             let pos = Position(x: base.x, y: i)
             if self.isOpenTilePosition(position: pos, excludingTypes: excluded) {
@@ -209,7 +220,7 @@ extension GameState {
         static let maxCols = 25
         static let totalTiles = maxCols * maxRows
         
-        static let pushBackEventRange = 2..<5
+        static let attackPlayerRange = 2..<5
         
         static let itemSpawnRate = 0.045
         static let itemTileTypes = [TileType.blueItem, TileType.redItem, TileType.purpleItem, TileType.pinkItem]
@@ -222,7 +233,7 @@ extension GameState {
 
 extension GameState {
     enum Defaults {
-        static let currentInputs = Set<InputCommand>()
+        static let playerInputs = Set<InputCommand>()
         static let filledTiles = [Position: TileType]()
         static let playerPosition = Position(x: 12, y: 7)
         static let isDead = false

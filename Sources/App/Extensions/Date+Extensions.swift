@@ -2,18 +2,15 @@
 //  File.swift
 //  
 //
-//  Created by Matthew Hayes on 5/29/22.
+//  Created by Matthew Hayes on 6/14/22.
 //
 
 import Foundation
 
-#if os(Linux)
-
-/// Allows for usage of Date.now in  production
 extension Date {
+    #if os(Linux)
     static var now: Date {
         .init()
     }
+    #endif
 }
-
-#endif

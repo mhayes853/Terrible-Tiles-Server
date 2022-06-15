@@ -272,30 +272,30 @@ class TestGameState: XCTestCase {
     }
     
     func testSimpleAdvanceGameState() {
-        let gameState = GameState(currentInputs: [.moveLeft, .moveRight])
-        gameState.advance()
+        let gameState = GameState(playerInputs: [.moveLeft, .moveRight])
+        gameState.processCurrentInputs()
         XCTAssertEqual(gameState.playerPosition, GameState.Defaults.playerPosition)
     }
     
     func testAllMovementsAdvance() {
-        let gameState = GameState(currentInputs: [.moveLeft, .moveRight, .moveDown, .moveUp])
-        gameState.advance()
+        let gameState = GameState(playerInputs: [.moveLeft, .moveRight, .moveDown, .moveUp])
+        gameState.processCurrentInputs()
         XCTAssertEqual(gameState.playerPosition, GameState.Defaults.playerPosition)
     }
     
     func testDiagonalMovementAdvance() {
-        let gameState = GameState(currentInputs: [.moveLeft, .moveUp])
-        gameState.advance()
+        let gameState = GameState(playerInputs: [.moveLeft, .moveUp])
+        gameState.processCurrentInputs()
         
         let expected = Position(x: GameState.Defaults.playerPosition.x - 1, y: GameState.Defaults.playerPosition.y + 1)
         XCTAssertEqual(gameState.playerPosition, expected)
     }
     
     func testSingleDirectionRepeatedAdvance() {
-        let gameState = GameState(currentInputs: [.moveLeft])
+        let gameState = GameState(playerInputs: [.moveLeft])
         
         for _ in 0..<10 {
-            gameState.advance()
+            gameState.processCurrentInputs()
         }
         
         let expected = Position(x: GameState.Defaults.playerPosition.x - 10, y: GameState.Defaults.playerPosition.y)
